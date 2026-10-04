@@ -1,10 +1,218 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Snag Register - MEPF</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEPF Snag Register</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: #f4f6f8;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input, select, textarea, button {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px;
+            margin-top: 6px;
+            font-size: 16px;
+        }
+
+        textarea {
+            min-height: 90px;
+        }
+
+        button {
+            margin-top: 20px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            display: none;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Snag Register - MEPF</h1>
-    <p>Web application is working.</p>
+
+<div class="container">
+
+    <h1>MEPF Snag Register</h1>
+
+    <form id="snagForm">
+
+        <label>Package</label>
+        <select id="package" required>
+            <option value="">Select Package</option>
+            <option value="Electrical">Electrical</option>
+            <option value="HVAC">HVAC</option>
+            <option value="Fire Fighting">Fire Fighting</option>
+            <option value="Plumbing">Plumbing</option>
+            <option value="ELV">ELV</option>
+            <option value="Utilities">Utilities</option>
+        </select>
+
+        <label>Vendor</label>
+        <input type="text" id="vendor" placeholder="Enter vendor" required>
+
+        <label>Raised By</label>
+        <input type="text" id="raisedBy" placeholder="Your name" required>
+
+        <label>Shop / Building</label>
+        <input type="text" id="shopBuilding" placeholder="Enter shop / building" required>
+
+        <label>Location</label>
+        <input type="text" id="location" placeholder="Enter location" required>
+
+        <label>Snag Point Description</label>
+        <textarea id="snagDescription"
+                  placeholder="Describe the snag"
+                  required></textarea>
+
+        <label>Reference Image</label>
+        <input type="file"
+               id="referenceImage"
+               accept="image/*"
+               capture="environment">
+
+        <button type="submit">Submit Snag</button>
+
+    </form>
+
+    <div id="message" class="status"></div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL = "https://mbetkoyethmcdgdprdcg.supabase.co";
+
+const SUPABASE_KEY = "sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
+
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+document.getElementById("snagForm").addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const message = document.getElementById("message");
+
+    message.style.display = "block";
+    message.innerText = "Submitting...";
+
+    try {
+
+        const packageName =
+            document.getElementById("package").value;
+
+        const vendor =
+            document.getElementById("vendor").value;
+
+        const raisedBy =
+            document.getElementById("raisedBy").value;
+
+        const shopBuilding =
+            document.getElementById("shopBuilding").value;
+
+        const location =
+            document.getElementById("location").value;
+
+        const snagDescription =
+            document.getElementById("snagDescription").value;
+
+        const imageFile =
+            document.getElementById("referenceImage").files[0];
+
+        let imageUrl = null;
+
+        if (imageFile) {
+
+            const fileName =
+                Date.now() + "-" +
+                imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+
+            const { error: uploadError } =
+                await supabaseClient.storage
+                .from("snag-photos")
+                .upload(fileName, imageFile);
+
+            if (uploadError) {
+                throw uploadError;
+            }
+
+            const { data: publicUrlData } =
+                supabaseClient.storage
+                .from("snag-photos")
+                .getPublicUrl(fileName);
+
+            imageUrl = publicUrlData.publicUrl;
+        }
+
+        const { error } =
+            await supabaseClient
+            .from("Snag Register _ MEPF")
+            .insert([{
+                package: packageName,
+                vendor: vendor,
+                raised_by: raisedBy,
+                shop_building: shopBuilding,
+                location: location,
+                snag_description: snagDescription,
+                reference_image: imageUrl
+            }]);
+
+        if (error) {
+            throw error;
+        }
+
+        message.innerText = "Snag submitted successfully.";
+
+        document.getElementById("snagForm").reset();
+
+    } catch (error) {
+
+        console.error(error);
+
+        message.innerText =
+            "Error: " + error.message;
+    }
+
+});
+
+</script>
+
 </body>
 </html>
