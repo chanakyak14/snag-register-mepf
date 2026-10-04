@@ -1,216 +1,517 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>MEPF Snag Register</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        :root {
+            --navy: #12304a;
+            --navy-dark: #0b2236;
+            --teal: #008b8b;
+            --teal-dark: #006f6f;
+            --light-grey: #f3f6f8;
+            --border: #d8e0e5;
+            --text: #243746;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 15px;
-            background: #f4f6f8;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light-grey);
+            color: var(--text);
+        }
+
+        .header {
+            background: var(--navy);
+            color: white;
+            padding: 18px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+
+        .header-content {
+            max-width: 720px;
+            margin: auto;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 23px;
+            font-weight: 600;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            opacity: 0.85;
         }
 
         .container {
-            max-width: 700px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
+            max-width: 720px;
+            margin: 20px auto;
+            padding: 0 15px;
         }
 
-        h1 {
-            font-size: 24px;
-            margin-top: 0;
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+        }
+
+        .section-title {
+            margin: 0 0 20px;
+            font-size: 18px;
+            color: var(--navy);
+            font-weight: 600;
+            border-left: 4px solid var(--teal);
+            padding-left: 10px;
+        }
+
+        .field {
+            margin-bottom: 17px;
         }
 
         label {
             display: block;
-            margin-top: 15px;
-            font-weight: bold;
+            margin-bottom: 7px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
         }
 
-        input, select, textarea, button {
+        input,
+        select,
+        textarea {
             width: 100%;
-            box-sizing: border-box;
-            padding: 11px;
-            margin-top: 6px;
-            font-size: 16px;
+            padding: 12px 13px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: white;
+            color: var(--text);
+            font-size: 15px;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(0,139,139,0.10);
         }
 
         textarea {
-            min-height: 90px;
+            min-height: 105px;
+            resize: vertical;
         }
 
-        button {
-            margin-top: 20px;
-            background: #1976d2;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .status {
-            margin-top: 15px;
+        input[type="file"] {
             padding: 10px;
+            background: #fafcfd;
+        }
+
+        .submit-button {
+            width: 100%;
+            margin-top: 5px;
+            padding: 13px;
+            border: none;
+            border-radius: 7px;
+            background: var(--teal);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .submit-button:hover {
+            background: var(--teal-dark);
+        }
+
+        .submit-button:active {
+            transform: scale(0.99);
+        }
+
+        .submit-button:disabled {
+            background: #9aa9b2;
+            cursor: not-allowed;
+        }
+
+        .message {
             display: none;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        .success {
+            display: block;
+            background: #e8f6f4;
+            color: #006b68;
+            border: 1px solid #b9e3df;
+        }
+
+        .error {
+            display: block;
+            background: #fff0f0;
+            color: #a12626;
+            border: 1px solid #f0c3c3;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px 10px 25px;
+            font-size: 11px;
+            color: #7a8992;
+        }
+
+        @media (max-width: 600px) {
+
+            .header {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .container {
+                margin: 12px auto;
+                padding: 0 10px;
+            }
+
+            .card {
+                padding: 18px 15px;
+                border-radius: 10px;
+            }
+
+            .section-title {
+                font-size: 17px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<div class="container">
+<header class="header">
+    <div class="header-content">
+        <h1>MEPF Snag Register</h1>
+        <p>Snag Identification & Tracking</p>
+    </div>
+</header>
 
-    <h1>MEPF Snag Register</h1>
+<main class="container">
 
-    <form id="snagForm">
+    <div class="card">
 
-        <label>Package</label>
-        <select id="package" required>
-            <option value="">Select Package</option>
-            <option value="Electrical">Electrical</option>
-            <option value="HVAC">HVAC</option>
-            <option value="Fire Fighting">Fire Fighting</option>
-            <option value="Plumbing">Plumbing</option>
-            <option value="ELV">ELV</option>
-            <option value="Utilities">Utilities</option>
-        </select>
+        <h2 class="section-title">Raise New Snag</h2>
 
-        <label>Vendor</label>
-        <input type="text" id="vendor" placeholder="Enter vendor" required>
+        <form id="snagForm">
 
-        <label>Raised By</label>
-        <input type="text" id="raisedBy" placeholder="Your name" required>
+            <div class="field">
+                <label for="package">Package</label>
 
-        <label>Shop / Building</label>
-        <input type="text" id="shopBuilding" placeholder="Enter shop / building" required>
+                <select id="package" required>
+                    <option value="">Select Package</option>
+                    <option value="Electrical Package">Electrical Package</option>
+                    <option value="Fire Protection System">Fire Protection System</option>
+                    <option value="Ventilation System">Ventilation System</option>
+                    <option value="Fuel Yard">Fuel Yard</option>
+                    <option value="Piping & Supports">Piping & Supports</option>
+                    <option value="Fire Alarm, Public Addressal, BMS">
+                        Fire Alarm, Public Addressal, BMS
+                    </option>
+                    <option value="WTP RO STP">WTP RO STP</option>
+                    <option value="Treated Fresh Air">Treated Fresh Air</option>
+                    <option value="HVAC">HVAC</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
 
-        <label>Location</label>
-        <input type="text" id="location" placeholder="Enter location" required>
 
-        <label>Snag Point Description</label>
-        <textarea id="snagDescription"
-                  placeholder="Describe the snag"
-                  required></textarea>
+            <div class="field">
+                <label for="vendor">Vendor</label>
 
-        <label>Reference Image</label>
-        <input type="file"
-               id="referenceImage"
-               accept="image/*"
-               capture="environment">
+                <select id="vendor" required>
+                    <option value="">Select Vendor</option>
+                    <option value="Evio">Evio</option>
+                    <option value="Minimax">Minimax</option>
+                    <option value="Sidharth">Sidharth</option>
+                    <option value="Opserv">Opserv</option>
+                    <option value="URCC MEP">URCC MEP</option>
+                    <option value="Honeywell">Honeywell</option>
+                    <option value="Rochem">Rochem</option>
+                    <option value="Blue Star">Blue Star</option>
+                    <option value="Voltas">Voltas</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
 
-        <button type="submit">Submit Snag</button>
 
-    </form>
+            <div class="field">
+                <label for="raisedBy">Raised By</label>
 
-    <div id="message" class="status"></div>
+                <input
+                    type="text"
+                    id="raisedBy"
+                    placeholder="Enter your name"
+                    required
+                >
+            </div>
 
-</div>
+
+            <div class="field">
+                <label for="shopBuilding">Shop / Building</label>
+
+                <select id="shopBuilding" required>
+                    <option value="">Select Shop / Building</option>
+                    <option value="Metering Yard">Metering Yard</option>
+                    <option value="Sub Station">Sub Station</option>
+                    <option value="Fuel Yard">Fuel Yard</option>
+                    <option value="Utility">Utility</option>
+                    <option value="Security Cabin 02">Security Cabin 02</option>
+                    <option value="Canteen">Canteen</option>
+                    <option value="Admin">Admin</option>
+                    <option value="CKD">CKD</option>
+                    <option value="External">External</option>
+                    <option value="OHC">OHC</option>
+                    <option value="Security Cabin 01">Security Cabin 01</option>
+                    <option value="Security Office">Security Office</option>
+                    <option value="Fire Office">Fire Office</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+
+            <div class="field">
+                <label for="location">Location</label>
+
+                <input
+                    type="text"
+                    id="location"
+                    placeholder="Enter specific location"
+                    required
+                >
+            </div>
+
+
+            <div class="field">
+                <label for="snagDescription">
+                    Snag Point Description
+                </label>
+
+                <textarea
+                    id="snagDescription"
+                    placeholder="Describe the snag clearly"
+                    required
+                ></textarea>
+            </div>
+
+
+            <div class="field">
+                <label for="referenceImage">
+                    Reference Image
+                </label>
+
+                <input
+                    type="file"
+                    id="referenceImage"
+                    accept="image/*"
+                    capture="environment"
+                >
+            </div>
+
+
+            <button
+                type="submit"
+                class="submit-button"
+                id="submitButton"
+            >
+                Submit Snag
+            </button>
+
+        </form>
+
+        <div id="message" class="message"></div>
+
+    </div>
+
+</main>
+
+<footer class="footer">
+    Developed by Ravi Teja M
+</footer>
+
 
 <script>
 
-const SUPABASE_URL = "https://mbetkoyethmcdgdprdcg.supabase.co";
+const SUPABASE_URL =
+    "https://mbetkoyethmcdgdprdcg.supabase.co";
 
-const SUPABASE_KEY = "sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
+const SUPABASE_KEY =
+    "sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
 
-const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+const supabaseClient =
+    supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
 
-document.getElementById("snagForm").addEventListener("submit", async function(event) {
 
-    event.preventDefault();
+document
+    .getElementById("snagForm")
+    .addEventListener("submit", async function(event) {
 
-    const message = document.getElementById("message");
+        event.preventDefault();
 
-    message.style.display = "block";
-    message.innerText = "Submitting...";
+        const message =
+            document.getElementById("message");
 
-    try {
+        const submitButton =
+            document.getElementById("submitButton");
 
-        const packageName =
-            document.getElementById("package").value;
+        message.className = "message";
 
-        const vendor =
-            document.getElementById("vendor").value;
+        message.style.display = "block";
 
-        const raisedBy =
-            document.getElementById("raisedBy").value;
+        message.innerText = "Submitting...";
 
-        const shopBuilding =
-            document.getElementById("shopBuilding").value;
+        submitButton.disabled = true;
 
-        const location =
-            document.getElementById("location").value;
 
-        const snagDescription =
-            document.getElementById("snagDescription").value;
+        try {
 
-        const imageFile =
-            document.getElementById("referenceImage").files[0];
+            const packageName =
+                document.getElementById("package").value;
 
-        let imageUrl = null;
+            const vendor =
+                document.getElementById("vendor").value;
 
-        if (imageFile) {
+            const raisedBy =
+                document.getElementById("raisedBy").value;
 
-            const fileName =
-                Date.now() + "-" +
-                imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+            const shopBuilding =
+                document.getElementById("shopBuilding").value;
 
-            const { error: uploadError } =
-                await supabaseClient.storage
-                .from("snag-photos")
-                .upload(fileName, imageFile);
+            const location =
+                document.getElementById("location").value;
 
-            if (uploadError) {
-                throw uploadError;
+            const snagDescription =
+                document.getElementById("snagDescription").value;
+
+            const imageFile =
+                document
+                .getElementById("referenceImage")
+                .files[0];
+
+
+            let imageUrl = null;
+
+
+            if (imageFile) {
+
+                const fileName =
+                    Date.now() +
+                    "-" +
+                    imageFile.name
+                    .replace(/[^a-zA-Z0-9.-]/g, "_");
+
+
+                const { error: uploadError } =
+                    await supabaseClient
+                    .storage
+                    .from("snag-photos")
+                    .upload(
+                        fileName,
+                        imageFile
+                    );
+
+
+                if (uploadError) {
+                    throw uploadError;
+                }
+
+
+                const { data: publicUrlData } =
+                    supabaseClient
+                    .storage
+                    .from("snag-photos")
+                    .getPublicUrl(fileName);
+
+
+                imageUrl =
+                    publicUrlData.publicUrl;
             }
 
-            const { data: publicUrlData } =
-                supabaseClient.storage
-                .from("snag-photos")
-                .getPublicUrl(fileName);
 
-            imageUrl = publicUrlData.publicUrl;
+            const { error } =
+                await supabaseClient
+                .from("Snag Register _ MEPF")
+                .insert([{
+
+                    package: packageName,
+
+                    vendor: vendor,
+
+                    raised_by: raisedBy,
+
+                    shop_building: shopBuilding,
+
+                    location: location,
+
+                    snag_description: snagDescription,
+
+                    reference_image: imageUrl
+
+                }]);
+
+
+            if (error) {
+                throw error;
+            }
+
+
+            message.className =
+                "message success";
+
+            message.innerText =
+                "Snag submitted successfully.";
+
+
+            document
+                .getElementById("snagForm")
+                .reset();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            message.className =
+                "message error";
+
+            message.innerText =
+                "Error: " + error.message;
+
+        } finally {
+
+            submitButton.disabled = false;
+
         }
 
-        const { error } =
-            await supabaseClient
-            .from("Snag Register _ MEPF")
-            .insert([{
-                package: packageName,
-                vendor: vendor,
-                raised_by: raisedBy,
-                shop_building: shopBuilding,
-                location: location,
-                snag_description: snagDescription,
-                reference_image: imageUrl
-            }]);
-
-        if (error) {
-            throw error;
-        }
-
-        message.innerText = "Snag submitted successfully.";
-
-        document.getElementById("snagForm").reset();
-
-    } catch (error) {
-
-        console.error(error);
-
-        message.innerText =
-            "Error: " + error.message;
-    }
-
-});
+    });
 
 </script>
 
