@@ -23,7 +23,21 @@
         * {
             box-sizing: border-box;
         }
-
+        .list-btn {
+            display: block;
+            text-align: center;
+            margin-top: 12px;
+            padding: 12px;
+            background: #0b1f3a;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .list-btn:hover {
+            background: #16345f;
+        }
         body {
             margin: 0;
             font-family: Arial, Helvetica, sans-serif;
@@ -388,7 +402,7 @@
             >
                 Submit Snag
             </button>
-
+            <a href="snag-list.html" class="list-btn">View Snag List</a>
         </form>
 
         <div id="message" class="message"></div>
