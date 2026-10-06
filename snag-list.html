@@ -70,6 +70,32 @@
             background: #006f76;
         }
 
+        .filter-bar {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-bar select {
+            padding: 9px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #1f2933;
+            font-size: 13px;
+            min-width: 160px;
+        }
+
+        .filter-bar select:focus {
+            outline: none;
+            border-color: #008c95;
+        }
+
         .status-message {
             background: white;
             padding: 14px;
@@ -147,6 +173,15 @@
             .top-bar h2 {
                 font-size: 18px;
             }
+
+            .filter-bar select {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .filter-bar .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -169,6 +204,30 @@
     </div>
 
     <div id="statusMessage" class="status-message"></div>
+
+    <div class="filter-bar">
+
+        <select id="packageFilter">
+            <option value="">All Packages</option>
+        </select>
+
+        <select id="vendorFilter">
+            <option value="">All Vendors</option>
+        </select>
+
+        <select id="shopFilter">
+            <option value="">All Shops / Buildings</option>
+        </select>
+
+        <select id="statusFilter">
+            <option value="">All Status</option>
+        </select>
+
+        <button type="button" class="btn" onclick="clearFilters()">
+            Clear Filters
+        </button>
+
+    </div>
 
     <div class="table-card">
 
@@ -212,6 +271,9 @@
 
     const TABLE_NAME = "Snag Register _ MEPF";
 
+    let allSnags = [];
+
+
     async function loadSnags() {
 
         const tableBody = document.getElementById("snagTableBody");
@@ -240,54 +302,11 @@
                 return new Date(b.raised_on) - new Date(a.raised_on);
             });
 
-            snags.sort((a, b) => {
-                return new Date(b.raised_on) - new Date(a.raised_on);
-            });
+            allSnags = snags;
 
-            tableBody.innerHTML = "";
+            populateFilters();
 
-            if (snags.length === 0) {
-
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="10" class="no-data">
-                            No snags found.
-                        </td>
-                    </tr>
-                `;
-
-                return;
-            }
-
-            snags.forEach((snag, index) => {
-
-                const row = document.createElement("tr");
-
-                const raisedOn = snag.raised_on
-                    ? new Date(snag.raised_on).toLocaleString("en-IN", {
-                        timeZone: "Asia/Kolkata"
-                    })
-                    : "";
-
-                const imageCell = snag.reference_image
-                    ? `<a class="photo-link" href="${snag.reference_image}" target="_blank">View Photo</a>`
-                    : "-";
-
-                row.innerHTML = `
-                    <td>${snags[index].id}</td>
-                    <td>${snag.package || ""}</td>
-                    <td>${snag.vendor || ""}</td>
-                    <td>${snag.raised_by || ""}</td>
-                    <td>${raisedOn}</td>
-                    <td>${snag.shop_building || ""}</td>
-                    <td>${snag.location || ""}</td>
-                    <td>${snag.snag_description || ""}</td>
-                    <td class="status-open">${snag.status || ""}</td>
-                    <td>${imageCell}</td>
-                `;
-
-                tableBody.appendChild(row);
-            });
+            displaySnags(allSnags);
 
         } catch (error) {
 
@@ -307,7 +326,228 @@
         }
     }
 
+
+    function populateFilters() {
+
+        const packageFilter =
+            document.getElementById("packageFilter");
+
+        const vendorFilter =
+            document.getElementById("vendorFilter");
+
+        const shopFilter =
+            document.getElementById("shopFilter");
+
+        const statusFilter =
+            document.getElementById("statusFilter");
+
+
+        const packages = [...new Set(
+            allSnags
+                .map(snag => snag.package)
+                .filter(Boolean)
+        )].sort();
+
+
+        const vendors = [...new Set(
+            allSnags
+                .map(snag => snag.vendor)
+                .filter(Boolean)
+        )].sort();
+
+
+        const shops = [...new Set(
+            allSnags
+                .map(snag => snag.shop_building)
+                .filter(Boolean)
+        )].sort();
+
+
+        const statuses = [...new Set(
+            allSnags
+                .map(snag => snag.status)
+                .filter(Boolean)
+        )].sort();
+
+
+        packageFilter.innerHTML =
+            `<option value="">All Packages</option>`;
+
+        vendorFilter.innerHTML =
+            `<option value="">All Vendors</option>`;
+
+        shopFilter.innerHTML =
+            `<option value="">All Shops / Buildings</option>`;
+
+        statusFilter.innerHTML =
+            `<option value="">All Status</option>`;
+
+
+        packages.forEach(item => {
+
+            packageFilter.innerHTML +=
+                `<option value="${item}">${item}</option>`;
+
+        });
+
+
+        vendors.forEach(item => {
+
+            vendorFilter.innerHTML +=
+                `<option value="${item}">${item}</option>`;
+
+        });
+
+
+        shops.forEach(item => {
+
+            shopFilter.innerHTML +=
+                `<option value="${item}">${item}</option>`;
+
+        });
+
+
+        statuses.forEach(item => {
+
+            statusFilter.innerHTML +=
+                `<option value="${item}">${item}</option>`;
+
+        });
+
+
+        packageFilter.onchange = applyFilters;
+        vendorFilter.onchange = applyFilters;
+        shopFilter.onchange = applyFilters;
+        statusFilter.onchange = applyFilters;
+    }
+
+
+    function applyFilters() {
+
+        const packageValue =
+            document.getElementById("packageFilter").value;
+
+        const vendorValue =
+            document.getElementById("vendorFilter").value;
+
+        const shopValue =
+            document.getElementById("shopFilter").value;
+
+        const statusValue =
+            document.getElementById("statusFilter").value;
+
+
+        const filteredSnags = allSnags.filter(snag => {
+
+            const packageMatch =
+                !packageValue ||
+                snag.package === packageValue;
+
+
+            const vendorMatch =
+                !vendorValue ||
+                snag.vendor === vendorValue;
+
+
+            const shopMatch =
+                !shopValue ||
+                snag.shop_building === shopValue;
+
+
+            const statusMatch =
+                !statusValue ||
+                snag.status === statusValue;
+
+
+            return packageMatch &&
+                   vendorMatch &&
+                   shopMatch &&
+                   statusMatch;
+        });
+
+
+        displaySnags(filteredSnags);
+    }
+
+
+    function displaySnags(snags) {
+
+        const tableBody =
+            document.getElementById("snagTableBody");
+
+        tableBody.innerHTML = "";
+
+
+        if (snags.length === 0) {
+
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="10" class="no-data">
+                        No snags found for selected filters.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        snags.forEach(snag => {
+
+            const row =
+                document.createElement("tr");
+
+
+            const raisedOn = snag.raised_on
+                ? new Date(snag.raised_on).toLocaleString(
+                    "en-IN",
+                    {
+                        timeZone: "Asia/Kolkata"
+                    }
+                )
+                : "";
+
+
+            const imageCell = snag.reference_image
+                ? `<a class="photo-link" href="${snag.reference_image}" target="_blank">View Photo</a>`
+                : "-";
+
+
+            row.innerHTML = `
+                <td>${snag.id}</td>
+                <td>${snag.package || ""}</td>
+                <td>${snag.vendor || ""}</td>
+                <td>${snag.raised_by || ""}</td>
+                <td>${raisedOn}</td>
+                <td>${snag.shop_building || ""}</td>
+                <td>${snag.location || ""}</td>
+                <td>${snag.snag_description || ""}</td>
+                <td class="status-open">${snag.status || ""}</td>
+                <td>${imageCell}</td>
+            `;
+
+
+            tableBody.appendChild(row);
+        });
+    }
+
+
+    function clearFilters() {
+
+        document.getElementById("packageFilter").value = "";
+
+        document.getElementById("vendorFilter").value = "";
+
+        document.getElementById("shopFilter").value = "";
+
+        document.getElementById("statusFilter").value = "";
+
+        displaySnags(allSnags);
+    }
+
+
     loadSnags();
+
 </script>
 
 </body>
