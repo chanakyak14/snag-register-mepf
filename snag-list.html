@@ -260,7 +260,9 @@
                 const row = document.createElement("tr");
 
                 const raisedOn = snag.raised_on
-                    ? new Date(snag.raised_on).toLocaleString("en-IN")
+                    ? new Date(snag.raised_on).toLocaleString("en-IN", {
+                        timeZone: "Asia/Kolkata"
+                    })
                     : "";
 
                 const imageCell = snag.reference_image
