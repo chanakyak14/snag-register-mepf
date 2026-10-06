@@ -562,6 +562,8 @@ document
             // INSERT SNAG INTO SUPABASE
             // --------------------------------------------------
 
+            const raisedOn = new Date().toISOString();
+            
             const { error } =
                 await supabaseClient
                 .from("Snag Register _ MEPF")
@@ -578,6 +580,8 @@ document
 
                     raised_mobile:
                         raisedMobile || null,
+
+                    raised_on: raisedOn,
 
                     shop_building:
                         shopBuilding,
