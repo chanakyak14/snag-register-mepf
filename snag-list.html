@@ -647,14 +647,16 @@
     }
 
 
-    document.addEventListener(
-        "click",
-        function() {
+    document.addEventListener("click", function(event) {
 
+        if (
+            !event.target.closest(".filter-button") &&
+            !event.target.closest(".filter-dropdown")
+        ) {
             closeAllFilters();
-
         }
-    );
+    
+    });
 
 
     function updateFilterDisplay() {
