@@ -120,6 +120,13 @@
             background: #fafcfd;
         }
 
+        .remember-note {
+            display: block;
+            margin-top: 5px;
+            font-size: 11px;
+            color: #7a8992;
+        }
+
         .submit-button {
             width: 100%;
             margin-top: 5px;
@@ -220,6 +227,8 @@
 
         <form id="snagForm">
 
+            <!-- PACKAGE -->
+
             <div class="field">
                 <label for="package">Package</label>
 
@@ -241,6 +250,8 @@
             </div>
 
 
+            <!-- VENDOR -->
+
             <div class="field">
                 <label for="vendor">Vendor</label>
 
@@ -260,6 +271,8 @@
             </div>
 
 
+            <!-- RAISED BY -->
+
             <div class="field">
                 <label for="raisedBy">Raised By</label>
 
@@ -269,8 +282,34 @@
                     placeholder="Enter your name"
                     required
                 >
+
+                <small class="remember-note">
+                    Name will be remembered on this device.
+                </small>
             </div>
 
+
+            <!-- MOBILE -->
+
+            <div class="field">
+                <label for="raisedMobile">Mobile No.</label>
+
+                <input
+                    type="tel"
+                    id="raisedMobile"
+                    placeholder="Enter mobile number (optional)"
+                    inputmode="numeric"
+                    maxlength="10"
+                    pattern="[0-9]{10}"
+                >
+
+                <small class="remember-note">
+                    Mobile number is optional and will be remembered on this device.
+                </small>
+            </div>
+
+
+            <!-- SHOP / BUILDING -->
 
             <div class="field">
                 <label for="shopBuilding">Shop / Building</label>
@@ -295,6 +334,8 @@
             </div>
 
 
+            <!-- LOCATION -->
+
             <div class="field">
                 <label for="location">Location</label>
 
@@ -306,6 +347,8 @@
                 >
             </div>
 
+
+            <!-- DESCRIPTION -->
 
             <div class="field">
                 <label for="snagDescription">
@@ -320,6 +363,8 @@
             </div>
 
 
+            <!-- REFERENCE IMAGE -->
+
             <div class="field">
                 <label for="referenceImage">
                     Reference Image
@@ -333,6 +378,8 @@
                 >
             </div>
 
+
+            <!-- SUBMIT -->
 
             <button
                 type="submit"
@@ -370,6 +417,30 @@ const supabaseClient =
     );
 
 
+// ======================================================
+// REMEMBER USER DETAILS ON THIS DEVICE
+// ======================================================
+
+const savedName =
+    localStorage.getItem("mepfRaisedBy");
+
+const savedMobile =
+    localStorage.getItem("mepfRaisedMobile");
+
+
+if (savedName) {
+    document.getElementById("raisedBy").value = savedName;
+}
+
+if (savedMobile) {
+    document.getElementById("raisedMobile").value = savedMobile;
+}
+
+
+// ======================================================
+// FORM SUBMISSION
+// ======================================================
+
 document
     .getElementById("snagForm")
     .addEventListener("submit", async function(event) {
@@ -400,22 +471,48 @@ document
                 document.getElementById("vendor").value;
 
             const raisedBy =
-                document.getElementById("raisedBy").value;
+                document.getElementById("raisedBy").value.trim();
+
+            const raisedMobile =
+                document.getElementById("raisedMobile").value.trim();
 
             const shopBuilding =
                 document.getElementById("shopBuilding").value;
 
             const location =
-                document.getElementById("location").value;
+                document.getElementById("location").value.trim();
 
             const snagDescription =
-                document.getElementById("snagDescription").value;
+                document.getElementById("snagDescription").value.trim();
 
             const imageFile =
                 document
                 .getElementById("referenceImage")
                 .files[0];
 
+
+            // --------------------------------------------------
+            // SAVE USER DETAILS ON THIS DEVICE
+            // --------------------------------------------------
+
+            localStorage.setItem(
+                "mepfRaisedBy",
+                raisedBy
+            );
+
+            if (raisedMobile) {
+
+                localStorage.setItem(
+                    "mepfRaisedMobile",
+                    raisedMobile
+                );
+
+            }
+
+
+            // --------------------------------------------------
+            // PHOTO UPLOAD
+            // --------------------------------------------------
 
             let imageUrl = null;
 
@@ -426,7 +523,10 @@ document
                     Date.now() +
                     "-" +
                     imageFile.name
-                    .replace(/[^a-zA-Z0-9.-]/g, "_");
+                    .replace(
+                        /[^a-zA-Z0-9.-]/g,
+                        "_"
+                    );
 
 
                 const { error: uploadError } =
@@ -448,7 +548,9 @@ document
                     supabaseClient
                     .storage
                     .from("snag-photos")
-                    .getPublicUrl(fileName);
+                    .getPublicUrl(
+                        fileName
+                    );
 
 
                 imageUrl =
@@ -456,24 +558,38 @@ document
             }
 
 
+            // --------------------------------------------------
+            // INSERT SNAG INTO SUPABASE
+            // --------------------------------------------------
+
             const { error } =
                 await supabaseClient
                 .from("Snag Register _ MEPF")
                 .insert([{
 
-                    package: packageName,
+                    package:
+                        packageName,
 
-                    vendor: vendor,
+                    vendor:
+                        vendor,
 
-                    raised_by: raisedBy,
+                    raised_by:
+                        raisedBy,
 
-                    shop_building: shopBuilding,
+                    raised_mobile:
+                        raisedMobile || null,
 
-                    location: location,
+                    shop_building:
+                        shopBuilding,
 
-                    snag_description: snagDescription,
+                    location:
+                        location,
 
-                    reference_image: imageUrl
+                    snag_description:
+                        snagDescription,
+
+                    reference_image:
+                        imageUrl
 
                 }]);
 
@@ -483,6 +599,10 @@ document
             }
 
 
+            // --------------------------------------------------
+            // SUCCESS
+            // --------------------------------------------------
+
             message.className =
                 "message success";
 
@@ -490,9 +610,25 @@ document
                 "Snag submitted successfully.";
 
 
-            document
-                .getElementById("snagForm")
-                .reset();
+            /*
+             * Keep Raised By and Mobile No.
+             * after submission because they are
+             * remembered for this device.
+             */
+
+            document.getElementById("package").value = "";
+            document.getElementById("vendor").value = "";
+            document.getElementById("shopBuilding").value = "";
+            document.getElementById("location").value = "";
+            document.getElementById("snagDescription").value = "";
+            document.getElementById("referenceImage").value = "";
+
+
+            document.getElementById("raisedBy").value =
+                localStorage.getItem("mepfRaisedBy") || "";
+
+            document.getElementById("raisedMobile").value =
+                localStorage.getItem("mepfRaisedMobile") || "";
 
 
         } catch (error) {
