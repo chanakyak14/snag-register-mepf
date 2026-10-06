@@ -236,6 +236,10 @@
 
             const snags = await response.json();
 
+            snags.sort((a, b) => {
+                return new Date(b.raised_on) - new Date(a.raised_on);
+            });
+
             tableBody.innerHTML = "";
 
             if (snags.length === 0) {
