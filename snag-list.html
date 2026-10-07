@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MEPF Snag List</title>
+
     <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
 
     <style>
@@ -446,7 +447,7 @@
         "https://mbetkoyethmcdgdprdcg.supabase.co";
 
     const SUPABASE_KEY =
-        "sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
+        "sb_publishable_K-ro9DWU-qxlFc_V_NQqDg_XLG-kjuv";
 
     const TABLE_NAME =
         "Snag Register _ MEPF";
@@ -902,289 +903,492 @@
         }
 
 
-        const workbook =
-            new ExcelJS.Workbook();
-
-
-        const worksheet =
-            workbook.addWorksheet(
-                "MEPF Snag List"
+        const downloadButton =
+            document.querySelector(
+                ".btn-download"
             );
 
 
-        worksheet.columns = [
-
-            {
-                header: "Sr. No.",
-                key: "id",
-                width: 10
-            },
-
-            {
-                header: "Package",
-                key: "package",
-                width: 28
-            },
-
-            {
-                header: "Vendor",
-                key: "vendor",
-                width: 20
-            },
-
-            {
-                header: "Raised By",
-                key: "raised_by",
-                width: 20
-            },
-
-            {
-                header: "Raised On",
-                key: "raised_on",
-                width: 22
-            },
-
-            {
-                header: "Shop / Building",
-                key: "shop_building",
-                width: 22
-            },
-
-            {
-                header: "Location",
-                key: "location",
-                width: 25
-            },
-
-            {
-                header: "Snag Description",
-                key: "snag_description",
-                width: 45
-            },
-
-            {
-                header: "Status",
-                key: "status",
-                width: 15
-            },
-
-            {
-                header: "Reference Image",
-                key: "reference_image",
-                width: 18
-            }
-
-        ];
+        const originalButtonText =
+            downloadButton.textContent;
 
 
-        snags.forEach(snag => {
+        downloadButton.disabled =
+            true;
 
-            const raisedOn =
-                snag.raised_on
 
-                ? new Date(
+        downloadButton.textContent =
+            "Preparing...";
+
+
+        try {
+
+            const workbook =
+                new ExcelJS.Workbook();
+
+
+            const worksheet =
+                workbook.addWorksheet(
+                    "MEPF Snag List"
+                );
+
+
+            worksheet.columns = [
+
+                {
+                    header: "Sr. No.",
+                    key: "id",
+                    width: 10
+                },
+
+                {
+                    header: "Package",
+                    key: "package",
+                    width: 28
+                },
+
+                {
+                    header: "Vendor",
+                    key: "vendor",
+                    width: 20
+                },
+
+                {
+                    header: "Raised By",
+                    key: "raised_by",
+                    width: 20
+                },
+
+                {
+                    header: "Raised On",
+                    key: "raised_on",
+                    width: 22
+                },
+
+                {
+                    header: "Shop / Building",
+                    key: "shop_building",
+                    width: 22
+                },
+
+                {
+                    header: "Location",
+                    key: "location",
+                    width: 25
+                },
+
+                {
+                    header: "Snag Description",
+                    key: "snag_description",
+                    width: 45
+                },
+
+                {
+                    header: "Status",
+                    key: "status",
+                    width: 15
+                },
+
+                {
+                    header: "Reference Image",
+                    key: "reference_image",
+                    width: 18
+                }
+
+            ];
+
+
+            snags.forEach(snag => {
+
+                const raisedOn =
                     snag.raised_on
-                  ).toLocaleString(
-                    "en-IN",
-                    {
-                        timeZone:
-                            "Asia/Kolkata"
-                    }
-                  )
 
-                : "";
+                    ? new Date(
+                        snag.raised_on
+                      ).toLocaleString(
+                        "en-IN",
+                        {
+                            timeZone:
+                                "Asia/Kolkata"
+                        }
+                      )
+
+                    : "";
 
 
-            worksheet.addRow({
+                worksheet.addRow({
 
-                id:
-                    snag.id,
+                    id:
+                        snag.id,
 
-                package:
-                    snag.package || "",
+                    package:
+                        snag.package || "",
 
-                vendor:
-                    snag.vendor || "",
+                    vendor:
+                        snag.vendor || "",
 
-                raised_by:
-                    snag.raised_by || "",
+                    raised_by:
+                        snag.raised_by || "",
 
-                raised_on:
-                    raisedOn,
+                    raised_on:
+                        raisedOn,
 
-                shop_building:
-                    snag.shop_building || "",
+                    shop_building:
+                        snag.shop_building || "",
 
-                location:
-                    snag.location || "",
+                    location:
+                        snag.location || "",
 
-                snag_description:
-                    snag.snag_description || "",
+                    snag_description:
+                        snag.snag_description || "",
 
-                status:
-                    snag.status || "",
+                    status:
+                        snag.status || "",
 
-                reference_image:
-                    ""
+                    reference_image:
+                        ""
+
+                });
 
             });
 
-        });
+
+            worksheet.getRow(1).font = {
+                bold: true
+            };
 
 
-        worksheet.getRow(1).font = {
-            bold: true
-        };
+            worksheet.getRow(1).alignment = {
+                vertical: "middle"
+            };
 
 
-        worksheet.getRow(1).alignment = {
-            vertical: "middle"
-        };
+            worksheet.getRow(1).height = 25;
 
 
-        worksheet.getRow(1).height = 25;
+            /*
+             * Compress image before adding to Excel
+             */
 
-
-        for (
-            let i = 0;
-            i < snags.length;
-            i++
-        ) {
-
-            const snag =
-                snags[i];
-
-
-            if (
-                !snag.reference_image
+            async function compressImage(
+                imageUrl
             ) {
-                continue;
-            }
-
-
-            try {
 
                 const response =
-                    await fetch(
-                        snag.reference_image
-                    );
+                    await fetch(imageUrl);
 
 
                 if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to download image."
+                    );
+
+                }
+
+
+                const originalBlob =
+                    await response.blob();
+
+
+                const objectUrl =
+                    URL.createObjectURL(
+                        originalBlob
+                    );
+
+
+                try {
+
+                    const image =
+                        new Image();
+
+
+                    image.src =
+                        objectUrl;
+
+
+                    await new Promise(
+                        (resolve, reject) => {
+
+                            image.onload =
+                                resolve;
+
+                            image.onerror =
+                                reject;
+
+                        }
+                    );
+
+
+                    const maxWidth =
+                        600;
+
+                    const maxHeight =
+                        450;
+
+
+                    let width =
+                        image.naturalWidth;
+
+                    let height =
+                        image.naturalHeight;
+
+
+                    const scale =
+                        Math.min(
+                            maxWidth / width,
+                            maxHeight / height,
+                            1
+                        );
+
+
+                    width =
+                        Math.round(
+                            width * scale
+                        );
+
+
+                    height =
+                        Math.round(
+                            height * scale
+                        );
+
+
+                    const canvas =
+                        document.createElement(
+                            "canvas"
+                        );
+
+
+                    canvas.width =
+                        width;
+
+                    canvas.height =
+                        height;
+
+
+                    const context =
+                        canvas.getContext(
+                            "2d"
+                        );
+
+
+                    context.drawImage(
+                        image,
+                        0,
+                        0,
+                        width,
+                        height
+                    );
+
+
+                    const compressedBlob =
+                        await new Promise(
+                            (resolve, reject) => {
+
+                                canvas.toBlob(
+                                    blob => {
+
+                                        if (blob) {
+                                            resolve(blob);
+                                        } else {
+                                            reject(
+                                                new Error(
+                                                    "Image compression failed."
+                                                )
+                                            );
+                                        }
+
+                                    },
+                                    "image/jpeg",
+                                    0.70
+                                );
+
+                            }
+                        );
+
+
+                    return compressedBlob;
+
+
+                } finally {
+
+                    URL.revokeObjectURL(
+                        objectUrl
+                    );
+
+                }
+
+            }
+
+
+            /*
+             * Add compressed images
+             */
+
+            for (
+                let i = 0;
+                i < snags.length;
+                i++
+            ) {
+
+                const snag =
+                    snags[i];
+
+
+                if (
+                    !snag.reference_image
+                ) {
                     continue;
                 }
 
 
-                const blob =
-                    await response.blob();
+                try {
+
+                    downloadButton.textContent =
+                        `Photo ${i + 1}/${snags.length}`;
 
 
-                const arrayBuffer =
-                    await blob.arrayBuffer();
+                    const compressedBlob =
+                        await compressImage(
+                            snag.reference_image
+                        );
 
 
-                let extension =
-                    "jpeg";
+                    const arrayBuffer =
+                        await compressedBlob.arrayBuffer();
 
 
-                if (
-                    blob.type.includes("png")
-                ) {
-                    extension = "png";
+                    const imageId =
+                        workbook.addImage({
+
+                            buffer:
+                                arrayBuffer,
+
+                            extension:
+                                "jpeg"
+
+                        });
+
+
+                    worksheet.addImage(
+                        imageId,
+                        {
+
+                            tl: {
+                                col: 9,
+                                row: i + 1
+                            },
+
+                            ext: {
+                                width: 100,
+                                height: 75
+                            }
+
+                        }
+                    );
+
+
+                    worksheet.getRow(
+                        i + 2
+                    ).height = 60;
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Image processing failed:",
+                        error
+                    );
+
                 }
 
-
-                const imageId =
-                    workbook.addImage({
-
-                        buffer:
-                            arrayBuffer,
-
-                        extension:
-                            extension
-
-                    });
+            }
 
 
-                worksheet.addImage(
-                    imageId,
+            downloadButton.textContent =
+                "Creating Excel...";
+
+
+            const buffer =
+                await workbook.xlsx.writeBuffer();
+
+
+            const excelBlob =
+                new Blob(
+                    [buffer],
                     {
-                        tl: {
-                            col: 9,
-                            row: i + 1
-                        },
-
-                        ext: {
-                            width: 100,
-                            height: 75
-                        }
+                        type:
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     }
                 );
 
 
-                worksheet.getRow(
-                    i + 2
-                ).height = 60;
-
-
-            } catch (error) {
-
-                console.error(
-                    "Image download failed:",
-                    error
+            const url =
+                URL.createObjectURL(
+                    excelBlob
                 );
 
-            }
 
-        }
-
-
-        const buffer =
-            await workbook.xlsx.writeBuffer();
+            const link =
+                document.createElement("a");
 
 
-        const blob =
-            new Blob(
-                [buffer],
-                {
-                    type:
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                }
+            link.href =
+                url;
+
+
+            const date =
+                new Date()
+                    .toISOString()
+                    .slice(0, 10);
+
+
+            link.download =
+                `MEPF_Snag_List_${date}.xlsx`;
+
+
+            document.body.appendChild(
+                link
             );
 
 
-        const url =
-            URL.createObjectURL(blob);
+            link.click();
 
 
-        const link =
-            document.createElement("a");
+            document.body.removeChild(
+                link
+            );
 
 
-        link.href =
-            url;
+            URL.revokeObjectURL(
+                url
+            );
 
 
-        const date =
-            new Date()
-                .toISOString()
-                .slice(0, 10);
+        } catch (error) {
+
+            console.error(
+                "Excel download failed:",
+                error
+            );
 
 
-        link.download =
-            `MEPF_Snag_List_${date}.xlsx`;
+            alert(
+                "Unable to create Excel file. Please try again."
+            );
 
 
-        document.body.appendChild(link);
+        } finally {
+
+            downloadButton.disabled =
+                false;
 
 
-        link.click();
+            downloadButton.textContent =
+                originalButtonText;
 
-
-        document.body.removeChild(link);
-
-
-        URL.revokeObjectURL(url);
+        }
 
     }
 
