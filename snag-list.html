@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MEPF Snag List</title>
     <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -445,7 +446,7 @@
         "https://mbetkoyethmcdgdprdcg.supabase.co";
 
     const SUPABASE_KEY =
-        "sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
+        "sb_publishable_K-ro9DWU-qxlFc_V_NQqDg_XLG-kjuv";
 
     const TABLE_NAME =
         "Snag Register _ MEPF";
@@ -817,19 +818,19 @@
                 : "";
 
 
-                const imageCell =
-                    snag.reference_image
-                
-                    ? `<a
-                        href="${snag.reference_image}"
-                        target="_blank">
-                        <img
-                            src="${snag.reference_image}"
-                            class="snag-image"
-                            alt="Snag Photo">
-                       </a>`
-                
-                    : "-";
+            const imageCell =
+                snag.reference_image
+
+                ? `<a
+                    href="${snag.reference_image}"
+                    target="_blank">
+                    <img
+                        src="${snag.reference_image}"
+                        class="snag-image"
+                        alt="Snag Photo">
+                   </a>`
+
+                : "-";
 
 
             row.innerHTML = `
@@ -884,22 +885,7 @@
     }
 
 
-    function csvEscape(value) {
-
-        if (value === null || value === undefined) {
-            return "";
-        }
-
-        const text =
-            String(value)
-                .replace(/"/g, '""');
-
-        return `"${text}"`;
-
-    }
-
-
-    function downloadExcel() {
+    async function downloadExcel() {
 
         const snags =
             getFilteredSnags();
@@ -916,75 +902,253 @@
         }
 
 
-        const headers = [
-            "Sr. No.",
-            "Package",
-            "Vendor",
-            "Raised By",
-            "Raised On",
-            "Shop / Building",
-            "Location",
-            "Snag Description",
-            "Status",
-            "Reference Image"
+        const workbook =
+            new ExcelJS.Workbook();
+
+
+        const worksheet =
+            workbook.addWorksheet(
+                "MEPF Snag List"
+            );
+
+
+        worksheet.columns = [
+
+            {
+                header: "Sr. No.",
+                key: "id",
+                width: 10
+            },
+
+            {
+                header: "Package",
+                key: "package",
+                width: 28
+            },
+
+            {
+                header: "Vendor",
+                key: "vendor",
+                width: 20
+            },
+
+            {
+                header: "Raised By",
+                key: "raised_by",
+                width: 20
+            },
+
+            {
+                header: "Raised On",
+                key: "raised_on",
+                width: 22
+            },
+
+            {
+                header: "Shop / Building",
+                key: "shop_building",
+                width: 22
+            },
+
+            {
+                header: "Location",
+                key: "location",
+                width: 25
+            },
+
+            {
+                header: "Snag Description",
+                key: "snag_description",
+                width: 45
+            },
+
+            {
+                header: "Status",
+                key: "status",
+                width: 15
+            },
+
+            {
+                header: "Reference Image",
+                key: "reference_image",
+                width: 18
+            }
+
         ];
 
 
-        const rows =
-            snags.map(snag => {
+        snags.forEach(snag => {
 
-                const raisedOn =
+            const raisedOn =
+                snag.raised_on
+
+                ? new Date(
                     snag.raised_on
-                    ? new Date(
-                        snag.raised_on
-                      ).toLocaleString(
-                        "en-IN",
-                        {
-                            timeZone:
-                                "Asia/Kolkata"
-                        }
-                      )
-                    : "";
+                  ).toLocaleString(
+                    "en-IN",
+                    {
+                        timeZone:
+                            "Asia/Kolkata"
+                    }
+                  )
+
+                : "";
 
 
-                return [
+            worksheet.addRow({
+
+                id:
                     snag.id,
-                    snag.package,
-                    snag.vendor,
-                    snag.raised_by,
+
+                package:
+                    snag.package || "",
+
+                vendor:
+                    snag.vendor || "",
+
+                raised_by:
+                    snag.raised_by || "",
+
+                raised_on:
                     raisedOn,
-                    snag.shop_building,
-                    snag.location,
-                    snag.snag_description,
-                    snag.status,
-                    snag.reference_image
-                ];
+
+                shop_building:
+                    snag.shop_building || "",
+
+                location:
+                    snag.location || "",
+
+                snag_description:
+                    snag.snag_description || "",
+
+                status:
+                    snag.status || "",
+
+                reference_image:
+                    ""
 
             });
 
-
-        const csvRows = [
-
-            headers.map(csvEscape).join(","),
-
-            ...rows.map(row =>
-                row.map(csvEscape).join(",")
-            )
-
-        ];
+        });
 
 
-        const csvContent =
-            "\uFEFF" +
-            csvRows.join("\r\n");
+        worksheet.getRow(1).font = {
+            bold: true
+        };
+
+
+        worksheet.getRow(1).alignment = {
+            vertical: "middle"
+        };
+
+
+        worksheet.getRow(1).height = 25;
+
+
+        for (
+            let i = 0;
+            i < snags.length;
+            i++
+        ) {
+
+            const snag =
+                snags[i];
+
+
+            if (
+                !snag.reference_image
+            ) {
+                continue;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        snag.reference_image
+                    );
+
+
+                if (!response.ok) {
+                    continue;
+                }
+
+
+                const blob =
+                    await response.blob();
+
+
+                const arrayBuffer =
+                    await blob.arrayBuffer();
+
+
+                let extension =
+                    "jpeg";
+
+
+                if (
+                    blob.type.includes("png")
+                ) {
+                    extension = "png";
+                }
+
+
+                const imageId =
+                    workbook.addImage({
+
+                        buffer:
+                            arrayBuffer,
+
+                        extension:
+                            extension
+
+                    });
+
+
+                worksheet.addImage(
+                    imageId,
+                    {
+                        tl: {
+                            col: 9,
+                            row: i + 1
+                        },
+
+                        ext: {
+                            width: 100,
+                            height: 75
+                        }
+                    }
+                );
+
+
+                worksheet.getRow(
+                    i + 2
+                ).height = 60;
+
+
+            } catch (error) {
+
+                console.error(
+                    "Image download failed:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        const buffer =
+            await workbook.xlsx.writeBuffer();
 
 
         const blob =
             new Blob(
-                [csvContent],
+                [buffer],
                 {
                     type:
-                        "text/csv;charset=utf-8;"
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 }
             );
 
@@ -997,7 +1161,8 @@
             document.createElement("a");
 
 
-        link.href = url;
+        link.href =
+            url;
 
 
         const date =
@@ -1007,7 +1172,7 @@
 
 
         link.download =
-            `MEPF_Snag_List_${date}.csv`;
+            `MEPF_Snag_List_${date}.xlsx`;
 
 
         document.body.appendChild(link);
@@ -1071,36 +1236,48 @@
 
 
         if (activeFilters.package) {
+
             selectedFilters.push(
                 `Package: ${activeFilters.package}`
             );
+
         }
 
 
         if (activeFilters.vendor) {
+
             selectedFilters.push(
                 `Vendor: ${activeFilters.vendor}`
             );
+
         }
 
 
         if (activeFilters.shop) {
+
             selectedFilters.push(
                 `Shop / Building: ${activeFilters.shop}`
             );
+
         }
 
 
         if (activeFilters.status) {
+
             selectedFilters.push(
                 `Status: ${activeFilters.status}`
             );
+
         }
 
 
-        if (selectedFilters.length > 0) {
+        if (
+            selectedFilters.length > 0
+        ) {
+
             filterText =
                 selectedFilters.join(" | ");
+
         }
 
 
