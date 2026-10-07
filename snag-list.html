@@ -1288,12 +1288,6 @@
                         }
                     );
 
-
-                    worksheet.getRow(
-                        i + 2
-                    ).height = 70;
-
-
                 } catch (error) {
 
                     console.error(
@@ -1304,7 +1298,20 @@
                 }
 
             }
-
+            
+            for (
+                let i = 0;
+                i < snags.length;
+                i++
+            ) {
+                // image processing...
+                // image insertion...
+            }
+            
+            // Set row heights after all images are added
+            for (let i = 0; i < snags.length; i++) {
+                worksheet.getRow(i + 2).height = 74;
+            }
 
             downloadButton.textContent =
                 "Creating Excel...";
