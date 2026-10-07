@@ -55,6 +55,12 @@
             font-size: 20px;
         }
 
+        .top-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
         .btn {
             background: #008c95;
             color: white;
@@ -64,10 +70,27 @@
             cursor: pointer;
             text-decoration: none;
             font-size: 14px;
+            font-weight: 600;
         }
 
         .btn:hover {
             background: #006f76;
+        }
+
+        .btn-download {
+            background: #0b1f3a;
+        }
+
+        .btn-download:hover {
+            background: #16345f;
+        }
+
+        .btn-mail {
+            background: #4b6475;
+        }
+
+        .btn-mail:hover {
+            background: #364b5a;
         }
 
         .status-message {
@@ -211,8 +234,22 @@
                 margin-top: 15px;
             }
 
+            .top-bar {
+                align-items: flex-start;
+            }
+
             .top-bar h2 {
                 font-size: 18px;
+            }
+
+            .top-actions {
+                width: 100%;
+            }
+
+            .top-actions .btn {
+                flex: 1;
+                text-align: center;
+                min-width: 120px;
             }
 
             .filter-dropdown {
@@ -239,9 +276,27 @@
 
         <h2>Live Snag List</h2>
 
-        <a href="index.html" class="btn">
-            + Raise New Snag
-        </a>
+        <div class="top-actions">
+
+            <a href="index.html" class="btn">
+                + Raise New Snag
+            </a>
+
+            <button
+                type="button"
+                class="btn btn-download"
+                onclick="downloadExcel()">
+                ↓ Download
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-mail"
+                onclick="mailSummary()">
+                ✉ Mail
+            </button>
+
+        </div>
 
     </div>
 
@@ -655,7 +710,7 @@
         ) {
             closeAllFilters();
         }
-    
+
     });
 
 
@@ -813,6 +868,259 @@
             tableBody.appendChild(row);
 
         });
+
+    }
+
+
+    function csvEscape(value) {
+
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        const text =
+            String(value)
+                .replace(/"/g, '""');
+
+        return `"${text}"`;
+
+    }
+
+
+    function downloadExcel() {
+
+        const snags =
+            getFilteredSnags();
+
+
+        if (snags.length === 0) {
+
+            alert(
+                "No snag records available for download."
+            );
+
+            return;
+
+        }
+
+
+        const headers = [
+            "Sr. No.",
+            "Package",
+            "Vendor",
+            "Raised By",
+            "Raised On",
+            "Shop / Building",
+            "Location",
+            "Snag Description",
+            "Status",
+            "Reference Image"
+        ];
+
+
+        const rows =
+            snags.map(snag => {
+
+                const raisedOn =
+                    snag.raised_on
+                    ? new Date(
+                        snag.raised_on
+                      ).toLocaleString(
+                        "en-IN",
+                        {
+                            timeZone:
+                                "Asia/Kolkata"
+                        }
+                      )
+                    : "";
+
+
+                return [
+                    snag.id,
+                    snag.package,
+                    snag.vendor,
+                    snag.raised_by,
+                    raisedOn,
+                    snag.shop_building,
+                    snag.location,
+                    snag.snag_description,
+                    snag.status,
+                    snag.reference_image
+                ];
+
+            });
+
+
+        const csvRows = [
+
+            headers.map(csvEscape).join(","),
+
+            ...rows.map(row =>
+                row.map(csvEscape).join(",")
+            )
+
+        ];
+
+
+        const csvContent =
+            "\uFEFF" +
+            csvRows.join("\r\n");
+
+
+        const blob =
+            new Blob(
+                [csvContent],
+                {
+                    type:
+                        "text/csv;charset=utf-8;"
+                }
+            );
+
+
+        const url =
+            URL.createObjectURL(blob);
+
+
+        const link =
+            document.createElement("a");
+
+
+        link.href = url;
+
+
+        const date =
+            new Date()
+                .toISOString()
+                .slice(0, 10);
+
+
+        link.download =
+            `MEPF_Snag_List_${date}.csv`;
+
+
+        document.body.appendChild(link);
+
+
+        link.click();
+
+
+        document.body.removeChild(link);
+
+
+        URL.revokeObjectURL(url);
+
+    }
+
+
+    function mailSummary() {
+
+        const snags =
+            getFilteredSnags();
+
+
+        if (snags.length === 0) {
+
+            alert(
+                "No snag records available for the email summary."
+            );
+
+            return;
+
+        }
+
+
+        const total =
+            snags.length;
+
+
+        const openCount =
+            snags.filter(
+                snag => snag.status === "Open"
+            ).length;
+
+
+        const inProgressCount =
+            snags.filter(
+                snag => snag.status === "In Progress"
+            ).length;
+
+
+        const closedCount =
+            snags.filter(
+                snag => snag.status === "Closed"
+            ).length;
+
+
+        let filterText =
+            "All Snags";
+
+
+        const selectedFilters = [];
+
+
+        if (activeFilters.package) {
+            selectedFilters.push(
+                `Package: ${activeFilters.package}`
+            );
+        }
+
+
+        if (activeFilters.vendor) {
+            selectedFilters.push(
+                `Vendor: ${activeFilters.vendor}`
+            );
+        }
+
+
+        if (activeFilters.shop) {
+            selectedFilters.push(
+                `Shop / Building: ${activeFilters.shop}`
+            );
+        }
+
+
+        if (activeFilters.status) {
+            selectedFilters.push(
+                `Status: ${activeFilters.status}`
+            );
+        }
+
+
+        if (selectedFilters.length > 0) {
+            filterText =
+                selectedFilters.join(" | ");
+        }
+
+
+        const subject =
+            "MEPF Snag Status - " +
+            filterText;
+
+
+        const body =
+`MEPF Snag Status
+
+Filter: ${filterText}
+
+Total Snags: ${total}
+Open: ${openCount}
+In Progress: ${inProgressCount}
+Closed: ${closedCount}
+
+Please find the latest snag list attached separately if required.
+
+MEPF Snag Register`;
+
+
+        const mailto =
+            "mailto:?subject=" +
+            encodeURIComponent(subject) +
+            "&body=" +
+            encodeURIComponent(body);
+
+
+        window.location.href =
+            mailto;
 
     }
 
