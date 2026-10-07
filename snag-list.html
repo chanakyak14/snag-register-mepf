@@ -152,6 +152,16 @@
             font-weight: bold;
         }
 
+        .snag-image {
+            width: 100px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #d1d5db;
+            display: block;
+            cursor: pointer;
+        }
+
         .filter-header {
             display: flex;
             align-items: center;
@@ -807,17 +817,19 @@
                 : "";
 
 
-            const imageCell =
-                snag.reference_image
-
-                ? `<a
-                    class="photo-link"
-                    href="${snag.reference_image}"
-                    target="_blank">
-                    View Photo
-                   </a>`
-
-                : "-";
+                const imageCell =
+                    snag.reference_image
+                
+                    ? `<a
+                        href="${snag.reference_image}"
+                        target="_blank">
+                        <img
+                            src="${snag.reference_image}"
+                            class="snag-image"
+                            alt="Snag Photo">
+                       </a>`
+                
+                    : "-";
 
 
             row.innerHTML = `
