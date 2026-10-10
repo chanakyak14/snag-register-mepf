@@ -272,6 +272,8 @@
                 <option value="WTP RO STP">WTP RO STP</option>
                 <option value="Treated Fresh Air">Treated Fresh Air</option>
                 <option value="HVAC">HVAC</option>
+                <option value="Civil">Civil</option>
+                <option value="Interiors">Interiors (Admin only)</option>
                 <option value="Other">Other</option>
             </select>
         </div>
@@ -468,7 +470,9 @@ const packageVendorMap = {
     "Fire Alarm, Public Addressal, BMS": "Honeywell",
     "WTP RO STP": "Rochem",
     "Treated Fresh Air": "Blue Star",
-    "HVAC": "Voltas"
+    "HVAC": "Voltas",
+    "Civil": "URC",
+    "Interiors": "Godrej"
 
 };
 
@@ -478,12 +482,19 @@ const packageSelect =
 
 const vendorInput =
     document.getElementById("vendor");
+    const shopBuildingSelect = document.getElementById("shopBuilding");
 
 
 packageSelect.addEventListener("change", function() {
 
     const selectedPackage =
         packageSelect.value;
+    if (selectedPackage === "Interiors") {
+    shopBuildingSelect.value = "Admin";
+    shopBuildingSelect.disabled = true;
+    } else {
+        shopBuildingSelect.disabled = false;
+    }
 
     const mappedVendor =
         packageVendorMap[selectedPackage];
@@ -608,6 +619,7 @@ document
 
             const shopBuilding =
                 document.getElementById("shopBuilding").value;
+                document.getElementById("shopBuilding").disabled = false;
 
             const location =
                 document.getElementById("location").value.trim();
