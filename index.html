@@ -645,10 +645,14 @@ document
             const snagDescription =
                 document.getElementById("snagDescription").value.trim();
 
-            const imageFile =
-                document
-                .getElementById("referenceImage")
-                .files[0];
+            const cameraFile = document.getElementById("cameraInput").files[0];
+            const galleryFile = document.getElementById("galleryInput").files[0];
+            
+            const imageFile = cameraFile || galleryFile;
+            
+            if (!imageFile) {
+                throw new Error("Reference Image is mandatory. Please take a photo or choose a file.");
+            }
 
 
             // --------------------------------------------------
