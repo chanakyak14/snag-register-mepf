@@ -405,13 +405,30 @@
                 Reference Image
             </label>
 
-            <input
-                type="file"
-                id="referenceImage"
-                accept="image/*"
-                capture="environment"
-                required
-            >
+        <div style="display:flex; gap:10px;">
+            <button type="button" onclick="document.getElementById('cameraInput').click()">
+                📷 Take Photo
+            </button>
+        
+            <button type="button" onclick="document.getElementById('galleryInput').click()">
+                📁 Choose File
+            </button>
+        </div>
+        
+        <input
+            type="file"
+            id="cameraInput"
+            accept="image/*"
+            capture="environment"
+            style="display:none;"
+        >
+        
+        <input
+            type="file"
+            id="galleryInput"
+            accept="image/*"
+            style="display:none;"
+        >
         </div>
 
 
