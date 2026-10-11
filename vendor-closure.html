@@ -128,6 +128,9 @@ function normalize(value) {
 
 async function loadSnags() {
   const message = document.getElementById("message");
+  const message = document.getElementById("message");
+  message.textContent =
+  `${filtered.length} matching snag records`;
   const rows = document.getElementById("rows");
   message.textContent = "Loading snag records...";
 
