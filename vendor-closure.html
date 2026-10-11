@@ -167,7 +167,9 @@ function render() {
 
     return (!search || text.includes(search)) &&
       (!vendor || s.vendor === vendor) &&
-      (!status || normalize(s.status) === status);
+      (!status ||
+      normalize(s.status) === status ||
+      normalize(s.vendor_decision) === status);
   });
 
   const rows = document.getElementById("rows");
