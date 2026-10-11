@@ -24,6 +24,7 @@ td{padding:10px;border-bottom:1px solid #e5e7eb;font-size:13px;vertical-align:to
 .muted{color:#64748b}
 button{border:0;border-radius:6px;padding:10px 14px;background:#008c95;color:white;font-weight:bold;cursor:pointer}
 button:hover{background:#006f76}
+button:disabled{opacity:.6;cursor:wait}
 dialog{border:0;border-radius:12px;width:min(520px,94vw);padding:22px;box-shadow:0 10px 40px #0004}
 dialog::backdrop{background:#0007}
 dialog h2{margin-top:0;color:#0b1f3a}
@@ -36,94 +37,72 @@ footer{text-align:center;color:#777;font-size:11px;padding:24px}
 </style>
 </head>
 <body>
-
 <header>
-  <h1>Vendor Snag Closure</h1>
-  <p>MEPF Snag Identification &amp; Closure</p>
+<h1>Vendor Snag Closure</h1>
+<p>MEPF Snag Identification &amp; Closure</p>
 </header>
 
 <div class="container">
-  <div class="toolbar">
-    <input id="search" placeholder="Search snag points..." oninput="render()">
+<div class="toolbar">
+<input id="search" placeholder="Search snag points..." oninput="render()">
+<select id="vendorFilter" onchange="render()">
+<option value="">All Vendors</option>
+</select>
+<select id="statusFilter" onchange="render()">
+<option value="">All Statuses</option>
+<option value="Open">Open</option>
+<option value="In Progress">In Progress</option>
+<option value="Closed">Closed</option>
+</select>
+<button type="button" onclick="loadSnags()">Refresh List</button>
+</div>
 
-    <select id="vendorFilter" onchange="render()">
-      <option value="">All Vendors</option>
-    </select>
+<div id="message">Loading snag records...</div>
 
-    <select id="statusFilter" onchange="render()">
-      <option value="">All Statuses</option>
-      <option value="Open">Open</option>
-      <option value="In Progress">In Progress</option>
-      <option value="Closed">Closed</option>
-    </select>
-
-    <button type="button" onclick="loadSnags()">Refresh List</button>
-  </div>
-
-  <div id="message">Loading snag records...</div>
-
-  <div class="table-card">
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Package</th>
-          <th>Vendor</th>
-          <th>Shop / Building</th>
-          <th>Location</th>
-          <th>Original Photo</th>
-          <th>Snag Point</th>
-          <th>Current Status</th>
-          <th>Action Taken</th>
-          <th>Vendor Decision</th>
-          <th>Closure Photo</th>
-        </tr>
-      </thead>
-      <tbody id="rows">
-        <tr><td colspan="11">Loading...</td></tr>
-      </tbody>
-    </table>
-  </div>
+<div class="table-card">
+<table>
+<thead><tr>
+<th>ID</th><th>Package</th><th>Vendor</th><th>Shop / Building</th>
+<th>Location</th><th>Original Photo</th><th>Snag Point</th>
+<th>Current Status</th><th>Action Taken</th><th>Vendor Decision</th>
+<th>Closure Photo</th>
+</tr></thead>
+<tbody id="rows"><tr><td colspan="11">Loading...</td></tr></tbody>
+</table>
+</div>
 </div>
 
 <dialog id="closureDialog">
-  <h2>Submit Snag Closure</h2>
-  <p id="selectedSnag" class="muted"></p>
+<h2>Submit Snag Closure</h2>
+<p id="selectedSnag" class="muted"></p>
+<form id="closureForm">
+<input type="hidden" id="snagId">
 
-  <form id="closureForm">
-    <input type="hidden" id="snagId">
+<div class="form-field">
+<label for="actionTaken">Action Taken *</label>
+<textarea id="actionTaken" required placeholder="Describe corrective action taken"></textarea>
+</div>
 
-    <div class="form-field">
-      <label for="actionTaken">Action Taken *</label>
-      <textarea id="actionTaken" required
-        placeholder="Describe corrective action taken"></textarea>
-    </div>
+<div class="form-field">
+<label for="decision">Decision *</label>
+<select id="decision" required>
+<option value="">Select decision</option>
+<option value="Close">Close</option>
+<option value="Not Possible">Not Possible</option>
+</select>
+</div>
 
-    <div class="form-field">
-      <label for="decision">Decision *</label>
-      <select id="decision" required>
-        <option value="">Select decision</option>
-        <option value="Close">Close</option>
-        <option value="Not Possible">Not Possible</option>
-      </select>
-    </div>
+<div class="form-field">
+<label for="closurePhoto">Closure Photo (camera or upload) *</label>
+<input id="closurePhoto" type="file" accept="image/*" capture="environment" required>
+</div>
 
-    <div class="form-field">
-      <label for="closurePhoto">Closure Photo (camera or upload) *</label>
-      <input id="closurePhoto" type="file" accept="image/*"
-        capture="environment" required>
-    </div>
-
-    <p class="muted">
-      Photo upload and database saving are not connected yet.
-    </p>
-
-    <div class="actions">
-      <button type="button" class="secondary"
-        onclick="document.getElementById('closureDialog').close()">Cancel</button>
-      <button type="submit">Submit</button>
-    </div>
-  </form>
+<p class="muted">Submit to save the action, decision and photo.</p>
+<div class="actions">
+<button type="button" class="secondary" onclick="document.getElementById('closureDialog').close()">Cancel</button>
+<button id="submitButton" type="submit">Submit</button>
+</div>
+</form>
 </dialog>
 
 <footer>Developed by Ravi Teja M</footer>
@@ -132,11 +111,10 @@ footer{text-align:center;color:#777;font-size:11px;padding:24px}
 const SUPABASE_URL = "https://mbetkoyethmcdgdprdcg.supabase.co";
 const SUPABASE_KEY = "sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
 const TABLE_NAME = "Snag Register _ MEPF";
-
 let allSnags = [];
 
 function normalize(value) {
-  return String(value ?? "").trim().toLowerCase();
+  return String(value ?? "").trim().toLowerCase().replace(/^['"]+|['"]+$/g, "").trim();
 }
 
 async function loadSnags() {
@@ -144,10 +122,7 @@ async function loadSnags() {
   message.textContent = "Loading snag records...";
 
   try {
-    const url =
-      `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}` +
-      `?select=*&order=id.desc&limit=2000`;
-
+    const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}?select=*&order=id.desc&limit=2000`;
     const response = await fetch(url, {
       headers: {
         apikey: SUPABASE_KEY,
@@ -155,19 +130,13 @@ async function loadSnags() {
       }
     });
 
-    if (!response.ok) {
-      throw new Error(`Database request failed (${response.status})`);
-    }
+    if (!response.ok) throw new Error(`Database request failed (${response.status}): ${await response.text()}`);
 
     allSnags = await response.json();
 
-    const vendors = [
-      ...new Set(allSnags.map(s => s.vendor).filter(Boolean))
-    ].sort();
-
+    const vendors = [...new Set(allSnags.map(s => s.vendor).filter(Boolean))].sort();
     const filter = document.getElementById("vendorFilter");
     const previous = filter.value;
-
     filter.innerHTML = '<option value="">All Vendors</option>';
 
     vendors.forEach(v => {
@@ -178,13 +147,11 @@ async function loadSnags() {
     });
 
     filter.value = vendors.includes(previous) ? previous : "";
-
     render();
     message.textContent = `${allSnags.length} snag records loaded`;
   } catch (error) {
     console.error(error);
-    message.textContent =
-      "Unable to load records. Check database access and connection.";
+    message.textContent = `Unable to load records: ${error.message}`;
   }
 }
 
@@ -195,19 +162,12 @@ function render() {
 
   const filtered = allSnags.filter(s => {
     const text = normalize([
-      s.id,
-      s.package,
-      s.vendor,
-      s.shop_building,
-      s.location,
-      s.snag_description
+      s.id, s.package, s.vendor, s.shop_building, s.location, s.snag_description
     ].join(" "));
 
-    return (
-      (!search || text.includes(search)) &&
+    return (!search || text.includes(search)) &&
       (!vendor || s.vendor === vendor) &&
-      (!status || normalize(s.status).replace(/^['"]+|['"]+$/g, "") === status)
-    );
+      (!status || normalize(s.status) === status);
   });
 
   const rows = document.getElementById("rows");
@@ -226,50 +186,35 @@ function render() {
   filtered.forEach(s => {
     const tr = document.createElement("tr");
 
-    const values = [
-      s.id,
-      s.package,
-      s.vendor,
-      s.shop_building,
-      s.location
-    ];
-
-    values.forEach(v => {
+    [s.id, s.package, s.vendor, s.shop_building, s.location].forEach(v => {
       const td = document.createElement("td");
       td.textContent = v ?? "";
       tr.appendChild(td);
     });
 
-    // Original photo has its own column.
     const originalPhotoTd = document.createElement("td");
-
     if (s.reference_image) {
-      const originalLink = document.createElement("a");
-      originalLink.href = s.reference_image;
-      originalLink.target = "_blank";
-      originalLink.rel = "noopener noreferrer";
-      originalLink.textContent = "View Photo";
-      originalPhotoTd.appendChild(originalLink);
+      const a = document.createElement("a");
+      a.href = s.reference_image;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = "View Photo";
+      originalPhotoTd.appendChild(a);
     } else {
       originalPhotoTd.textContent = "-";
     }
-
     tr.appendChild(originalPhotoTd);
 
-    // Clicking the snag point opens the closure form.
     const snagTd = document.createElement("td");
-    const link = document.createElement("a");
-
-    link.href = "#";
-    link.className = "snag-link";
-    link.textContent = s.snag_description || "(No description)";
-
-    link.addEventListener("click", e => {
+    const snagLink = document.createElement("a");
+    snagLink.href = "#";
+    snagLink.className = "snag-link";
+    snagLink.textContent = s.snag_description || "(No description)";
+    snagLink.addEventListener("click", e => {
       e.preventDefault();
       openClosure(s);
     });
-
-    snagTd.appendChild(link);
+    snagTd.appendChild(snagLink);
     tr.appendChild(snagTd);
 
     const statusTd = document.createElement("td");
@@ -285,21 +230,19 @@ function render() {
     decisionTd.textContent = s.vendor_decision || "-";
     tr.appendChild(decisionTd);
 
-    // Closure photo has a separate column.
     const photoTd = document.createElement("td");
-
     if (s.closure_photo) {
-      const closureLink = document.createElement("a");
-      closureLink.href = s.closure_photo;
-      closureLink.target = "_blank";
-      closureLink.rel = "noopener noreferrer";
-      closureLink.textContent = "View Photo";
-      photoTd.appendChild(closureLink);
+      const a = document.createElement("a");
+      a.href = s.closure_photo;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = "View Photo";
+      photoTd.appendChild(a);
     } else {
       photoTd.textContent = "-";
     }
-
     tr.appendChild(photoTd);
+
     rows.appendChild(tr);
   });
 }
@@ -308,20 +251,100 @@ function openClosure(s) {
   document.getElementById("snagId").value = s.id;
   document.getElementById("selectedSnag").textContent =
     `ID ${s.id} · ${s.snag_description || ""}`;
-
   document.getElementById("actionTaken").value = s.action_taken || "";
   document.getElementById("decision").value = s.vendor_decision || "";
   document.getElementById("closurePhoto").value = "";
-
   document.getElementById("closureDialog").showModal();
 }
 
-document.getElementById("closureForm").addEventListener("submit", e => {
+document.getElementById("closureForm").addEventListener("submit", async e => {
   e.preventDefault();
-  alert(
-    "The form is not connected to database saving yet. " +
-    "No changes have been saved."
-  );
+
+  const button = document.getElementById("submitButton");
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+  let uploadedPath = null;
+
+  try {
+    const id = document.getElementById("snagId").value;
+    const actionTaken = document.getElementById("actionTaken").value.trim();
+    const decision = document.getElementById("decision").value;
+    const file = document.getElementById("closurePhoto").files[0];
+
+    if (!id || !actionTaken || !decision || !file) {
+      throw new Error("Please complete all required fields.");
+    }
+
+    if (!file.type.startsWith("image/")) {
+      throw new Error("Please select an image file.");
+    }
+
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const photoPath = `closures/${id}_${Date.now()}_${safeName}`;
+    uploadedPath = photoPath;
+
+    const uploadResponse = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/snag-photos/${photoPath}`,
+      {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": file.type,
+          "x-upsert": "false"
+        },
+        body: file
+      }
+    );
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Photo upload failed (${uploadResponse.status}): ${await uploadResponse.text()}`);
+    }
+
+    const photoUrl = `${SUPABASE_URL}/storage/v1/object/public/snag-photos/${photoPath}`;
+
+    const updateResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}?id=eq.${encodeURIComponent(id)}`,
+      {
+        method: "PATCH",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify({
+          action_taken: actionTaken,
+          vendor_decision: decision,
+          closure_photo: photoUrl,
+          closure_submitted_at: new Date().toISOString(),
+          status: decision === "Close" ? "Closed" : "Open"
+        })
+      }
+    );
+
+    if (!updateResponse.ok) {
+      throw new Error(`Database update failed (${updateResponse.status}): ${await updateResponse.text()}`);
+    }
+
+    const updatedRows = await updateResponse.json();
+    if (!updatedRows.length) {
+      throw new Error("No row was updated. Check Supabase UPDATE permissions.");
+    }
+
+    document.getElementById("closureDialog").close();
+    document.getElementById("closureForm").reset();
+    await loadSnags();
+    alert("Closure details and photo saved successfully.");
+
+  } catch (error) {
+    console.error(error);
+    alert(`Save failed: ${error.message}\n\nIf the photo uploaded but the database update failed, an unused photo may remain in Storage.`);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Submit";
+  }
 });
 
 loadSnags();
