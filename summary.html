@@ -1,0 +1,347 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MEPF Snag Summary</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    margin: 16px;
+    color: #182b45;
+    font-size: 11px;
+  }
+  h1 { margin: 0; font-size: 21px; }
+  h2 { margin: 12px 0 5px; font-size: 13px; }
+  .header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 3px solid #087e8b; padding-bottom: 8px;
+  }
+  .sub { color: #536477; margin-top: 4px; }
+  .actions { display: flex; gap: 6px; }
+  button {
+    border: 0; border-radius: 4px; padding: 8px 12px;
+    background: #087e8b; color: white; cursor: pointer;
+  }
+  button.secondary { background: #263b55; }
+  .cards {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; margin: 10px 0;
+  }
+  .card {
+    border: 1px solid #cbd5df; border-left: 4px solid #087e8b;
+    padding: 8px; border-radius: 4px;
+  }
+  .card .label { color: #536477; font-size: 10px; }
+  .card .value { font-size: 19px; font-weight: bold; margin-top: 3px; }
+  table {
+    border-collapse: collapse; width: 100%; table-layout: auto;
+    font-size: 10px;
+  }
+  th, td {
+    border: 1px solid #cbd5df; padding: 4px 5px;
+    text-align: center; overflow-wrap: anywhere;
+  }
+  th { background: #e8f0f5; color: #182b45; }
+  td:first-child, th:first-child { text-align: left; }
+  tfoot td, tr.total td { background: #e8f0f5; font-weight: bold; }
+  .building-wrap { overflow-x: auto; }
+  #message { margin: 8px 0; color: #536477; }
+  .note { margin-top: 6px; color: #536477; font-size: 9px; }
+  @media print {
+    @page { size: A4 landscape; margin: 7mm; }
+    body { margin: 0; font-size: 9px; }
+    .actions { display: none; }
+    h1 { font-size: 17px; }
+    h2 { margin-top: 8px; font-size: 11px; }
+    .cards { margin: 6px 0; gap: 5px; }
+    .card { padding: 5px; }
+    .card .value { font-size: 15px; }
+    th, td { padding: 3px; font-size: 8px; }
+    .note { font-size: 8px; }
+    table { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>MEPF SNAG POINTS SUMMARY</h1>
+    <div class="sub" id="reportDate"></div>
+  </div>
+  <div class="actions">
+    <button class="secondary" onclick="loadSummary()">Refresh</button>
+    <button onclick="window.print()">Print / Save PDF</button>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card"><div class="label">Total Snags</div><div class="value" id="total">—</div></div>
+  <div class="card"><div class="label">Closed</div><div class="value" id="closed">—</div></div>
+  <div class="card"><div class="label">Open</div><div class="value" id="open">—</div></div>
+  <div class="card"><div class="label">Not Possible</div><div class="value" id="notPossible">—</div></div>
+</div>
+
+<div id="message">Loading records from database…</div>
+
+<h2>1. Package-wise Summary</h2>
+<table id="packageTable">
+  <thead><tr>
+    <th>Sr.</th><th>Package</th><th>Vendor</th>
+    <th>Total Snags</th><th>Closed</th><th>Open</th><th>Not Possible</th>
+  </tr></thead>
+  <tbody></tbody>
+  <tfoot></tfoot>
+</table>
+
+<h2>2. Building-wise Summary</h2>
+<div class="building-wrap">
+<table id="buildingTable">
+  <thead></thead><tbody></tbody><tfoot></tfoot>
+</table>
+</div>
+<div class="note">
+  Status counts are based on the current database status. WIP and other unclassified statuses are not counted as Open or Closed.
+</div>
+
+<script>
+const SUPABASE_URL = "https://mbetkoyethmcdgdprdcg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
+const TABLE_NAME = "Snag Register _ MEPF";
+const PAGE_SIZE = 1000;
+
+const packages = [
+  "Electrical Package",
+  "Fire Protection System",
+  "Ventilation System",
+  "Fuel Yard",
+  "Piping & Supports",
+  "Fire alarm, Public Addressal, BMS",
+  "WTP RO STP",
+  "Treated Fresh Air",
+  "HVAC"
+];
+
+const vendors = [
+  "Evio", "Minimax", "Sidharth", "Opserv", "URC",
+  "Honeywell", "Rochem", "Blue Star", "Voltas"
+];
+
+function normalize(value) {
+  return String(value ?? "")
+    .trim().toLowerCase()
+    .replace(/^['"]+|['"]+$/g, "")
+    .trim();
+}
+
+function statusOf(s) {
+  const decision = normalize(s.vendor_decision);
+  const status = normalize(s.status);
+  if (decision === "not possible" || status === "not possible") return "Not Possible";
+  if (decision === "close" || status === "closed" || status === "close") return "Closed";
+  if (status === "open" || !status) return "Open";
+  return "Other";
+}
+
+function packageLabel(value) {
+  const n = normalize(value);
+  const aliases = {
+    "electrical": "Electrical Package",
+    "fire protection": "Fire Protection System",
+    "fire protection system": "Fire Protection System",
+    "ventilation": "Ventilation System",
+    "ventilation system": "Ventilation System",
+    "piping": "Piping & Supports",
+    "piping & supports": "Piping & Supports",
+    "fire alarm/public address/bms": "Fire alarm, Public Addressal, BMS",
+    "fire alarm, public addressal, bms": "Fire alarm, Public Addressal, BMS",
+    "treated fresh air": "Treated Fresh Air",
+    "wtp ro stp": "WTP RO STP",
+    "fuel yard": "Fuel Yard",
+    "hvac": "HVAC"
+  };
+  return aliases[n] || String(value || "Unspecified");
+}
+
+function vendorLabel(value) {
+  const n = normalize(value);
+  const known = vendors.find(v => normalize(v) === n);
+  return known || String(value || "Unspecified");
+}
+
+function buildingLabel(value) {
+  return String(value || "Unspecified").trim();
+}
+
+function blankCounts() {
+  return { total: 0, closed: 0, open: 0, notPossible: 0, other: 0 };
+}
+
+function addStatus(counts, status) {
+  counts.total++;
+  if (status === "Closed") counts.closed++;
+  else if (status === "Open") counts.open++;
+  else if (status === "Not Possible") counts.notPossible++;
+  else counts.other++;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;"
+  }[ch]));
+}
+
+async function fetchAllRecords() {
+  const all = [];
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}` +
+      `?select=id,package,vendor,shop_building,status,vendor_decision&order=id.asc&limit=${PAGE_SIZE}&offset=${offset}`;
+    const response = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Database request failed (${response.status}): ${await response.text()}`);
+    }
+    const batch = await response.json();
+    all.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+  }
+  return all;
+}
+
+function renderPackageSummary(records) {
+  const map = new Map();
+  for (const s of records) {
+    const key = packageLabel(s.package) + "||" + vendorLabel(s.vendor);
+    if (!map.has(key)) map.set(key, {
+      package: packageLabel(s.package), vendor: vendorLabel(s.vendor), counts: blankCounts()
+    });
+    addStatus(map.get(key).counts, statusOf(s));
+  }
+
+  const ordered = [];
+  for (const p of packages) {
+    const matching = [...map.values()]
+      .filter(x => normalize(x.package) === normalize(p))
+      .sort((a, b) => a.vendor.localeCompare(b.vendor));
+    ordered.push(...matching);
+  }
+  const extra = [...map.values()].filter(x =>
+    !packages.some(p => normalize(p) === normalize(x.package))
+  ).sort((a, b) => a.package.localeCompare(b.package));
+  ordered.push(...extra);
+
+  const body = document.querySelector("#packageTable tbody");
+  const foot = document.querySelector("#packageTable tfoot");
+  body.innerHTML = ordered.map((x, i) => `
+    <tr><td>${i + 1}</td><td>${escapeHtml(x.package)}</td>
+    <td>${escapeHtml(x.vendor)}</td><td>${x.counts.total}</td>
+    <td>${x.counts.closed}</td><td>${x.counts.open}</td>
+    <td>${x.counts.notPossible}</td></tr>`).join("");
+
+  const totals = records.reduce((a, s) => {
+    addStatus(a, statusOf(s));
+    return a;
+  }, blankCounts());
+
+  foot.innerHTML = `<tr class="total"><td></td><td>Total</td><td></td>
+    <td>${totals.total}</td><td>${totals.closed}</td><td>${totals.open}</td>
+    <td>${totals.notPossible}</td></tr>`;
+
+  document.getElementById("total").textContent = totals.total;
+  document.getElementById("closed").textContent = totals.closed;
+  document.getElementById("open").textContent = totals.open;
+  document.getElementById("notPossible").textContent = totals.notPossible;
+}
+
+function renderBuildingSummary(records) {
+  const buildingMap = new Map();
+
+  for (const s of records) {
+    const building = buildingLabel(s.shop_building);
+    const vendor = vendorLabel(s.vendor);
+    const status = statusOf(s);
+
+    if (!buildingMap.has(building)) {
+      buildingMap.set(building, { vendors: new Map(), counts: blankCounts() });
+    }
+    const row = buildingMap.get(building);
+    if (!row.vendors.has(vendor)) row.vendors.set(vendor, blankCounts());
+    addStatus(row.vendors.get(vendor), status);
+    addStatus(row.counts, status);
+  }
+
+  const vendorNames = [...new Set([
+    ...vendors,
+    ...records.map(s => vendorLabel(s.vendor)).filter(v => !vendors.includes(v))
+  ])];
+
+  const thead = document.querySelector("#buildingTable thead");
+  const tbody = document.querySelector("#buildingTable tbody");
+  const tfoot = document.querySelector("#buildingTable tfoot");
+
+  thead.innerHTML = `<tr><th rowspan="2">Building</th>${
+    vendorNames.map(v => `<th colspan="2">${escapeHtml(v)}</th>`).join("")
+  }<th colspan="4">Total</th></tr><tr>${
+    vendorNames.map(() => "<th>Closed</th><th>Open</th>").join("")
+  }<th>Snags</th><th>Closed</th><th>Open</th><th>Not Possible</th></tr>`;
+
+  const buildingNames = [...buildingMap.keys()].sort((a, b) => a.localeCompare(b));
+
+  tbody.innerHTML = buildingNames.map(name => {
+    const row = buildingMap.get(name);
+    const cells = vendorNames.map(v => {
+      const c = row.vendors.get(v) || blankCounts();
+      return `<td>${c.closed || ""}</td><td>${c.open || ""}</td>`;
+    }).join("");
+    return `<tr><td>${escapeHtml(name)}</td>${cells}
+      <td>${row.counts.total}</td><td>${row.counts.closed}</td>
+      <td>${row.counts.open}</td><td>${row.counts.notPossible}</td></tr>`;
+  }).join("");
+
+  const totalsByVendor = new Map(vendorNames.map(v => [v, blankCounts()]));
+  const totals = blankCounts();
+  for (const s of records) {
+    const v = vendorLabel(s.vendor);
+    addStatus(totalsByVendor.get(v), statusOf(s));
+    addStatus(totals, statusOf(s));
+  }
+
+  tfoot.innerHTML = `<tr class="total"><td>Total</td>${
+    vendorNames.map(v => {
+      const c = totalsByVendor.get(v);
+      return `<td>${c.closed || ""}</td><td>${c.open || ""}</td>`;
+    }).join("")
+  }<td>${totals.total}</td><td>${totals.closed}</td>
+  <td>${totals.open}</td><td>${totals.notPossible}</td></tr>`;
+}
+
+async function loadSummary() {
+  const message = document.getElementById("message");
+  message.textContent = "Loading all database records…";
+  try {
+    const records = await fetchAllRecords();
+    renderPackageSummary(records);
+    renderBuildingSummary(records);
+    message.textContent = `${records.length.toLocaleString()} records loaded from the database.`;
+  } catch (error) {
+    console.error(error);
+    message.textContent = `Unable to load summary: ${error.message}`;
+  }
+}
+
+document.getElementById("reportDate").textContent =
+  "Reporting date: " + new Date().toLocaleDateString("en-IN", {
+    day: "2-digit", month: "short", year: "numeric"
+  });
+
+loadSummary();
+</script>
+</body>
+</html>
