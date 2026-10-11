@@ -50,9 +50,9 @@ footer{text-align:center;color:#777;font-size:11px;padding:24px}
 </select>
 <select id="statusFilter" onchange="render()">
 <option value="">All Statuses</option>
-<option value="Open">Open</option>
+<option value="open">Open</option>
 <option value="not possible">Not Possible</option>
-<option value="Closed">Closed</option>
+<option value="closed">Closed</option>
 </select>
 <button type="button" onclick="loadSnags()">Refresh List</button>
 </div>
@@ -61,13 +61,17 @@ footer{text-align:center;color:#777;font-size:11px;padding:24px}
 
 <div class="table-card">
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>ID</th><th>Package</th><th>Vendor</th><th>Shop / Building</th>
 <th>Location</th><th>Original Photo</th><th>Snag Point</th>
 <th>Current Status</th><th>Action Taken</th><th>Vendor Decision</th>
 <th>Closure Photo</th>
-</tr></thead>
-<tbody id="rows"><tr><td colspan="11">Loading...</td></tr></tbody>
+</tr>
+</thead>
+<tbody id="rows">
+<tr><td colspan="11">Loading...</td></tr>
+</tbody>
 </table>
 </div>
 </div>
@@ -112,34 +116,53 @@ const SUPABASE_URL = "https://mbetkoyethmcdgdprdcg.supabase.co";
 const SUPABASE_KEY = "sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
 const TABLE_NAME = "Snag Register _ MEPF";
 let allSnags = [];
+let totalRecords = 0;
 
 function normalize(value) {
-  return String(value ?? "").trim().toLowerCase().replace(/^['"]+|['"]+$/g, "").trim();
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/^['"]+|['"]+$/g, "")
+    .trim();
 }
 
 async function loadSnags() {
   const message = document.getElementById("message");
+  const rows = document.getElementById("rows");
   message.textContent = "Loading snag records...";
 
   try {
-    const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}?select=*&order=id.desc&limit=2000`;
+    const url =
+      `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}` +
+      `?select=*&order=id.desc&limit=2000`;
+
     const response = await fetch(url, {
-  headers: {
-    apikey: SUPABASE_KEY,
-    Authorization: `Bearer ${SUPABASE_KEY}`,
-    Prefer: "count=exact"
-  }
       headers: {
         apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Prefer: "count=exact"
       }
     });
 
-    if (!response.ok) throw new Error(`Database request failed (${response.status}): ${await response.text()}`);
+    if (!response.ok) {
+      throw new Error(
+        `Database request failed (${response.status}): ${await response.text()}`
+      );
+    }
+
+    // Get the exact total count from Content-Range, e.g. 0-1999/1115.
+    const contentRange = response.headers.get("Content-Range");
+    const countMatch = contentRange && contentRange.match(/\/(\d+|\*)$/);
+    totalRecords = countMatch && countMatch[1] !== "*"
+      ? Number(countMatch[1])
+      : null;
 
     allSnags = await response.json();
 
-    const vendors = [...new Set(allSnags.map(s => s.vendor).filter(Boolean))].sort();
+    const vendors = [...new Set(
+      allSnags.map(s => s.vendor).filter(Boolean)
+    )].sort();
+
     const filter = document.getElementById("vendorFilter");
     const previous = filter.value;
     filter.innerHTML = '<option value="">All Vendors</option>';
@@ -152,12 +175,29 @@ async function loadSnags() {
     });
 
     filter.value = vendors.includes(previous) ? previous : "";
+
     render();
-    message.textContent = `${allSnags.length} snag records loaded`;
+
+    message.textContent = totalRecords === null
+      ? `${allSnags.length} records loaded; total count unavailable`
+      : `${totalRecords.toLocaleString()} total snag records in database · ${allSnags.length.toLocaleString()} loaded in this list`;
   } catch (error) {
     console.error(error);
     message.textContent = `Unable to load records: ${error.message}`;
+    rows.innerHTML = '<tr><td colspan="11">Unable to load records.</td></tr>';
   }
+}
+
+function getDisplayStatus(s) {
+  if (normalize(s.vendor_decision) === "not possible") {
+    return "Not Possible";
+  }
+
+  if (normalize(s.status) === "not possible") {
+    return "Not Possible";
+  }
+
+  return s.status || "";
 }
 
 function render() {
@@ -167,14 +207,13 @@ function render() {
 
   const filtered = allSnags.filter(s => {
     const text = normalize([
-      s.id, s.package, s.vendor, s.shop_building, s.location, s.snag_description
+      s.id, s.package, s.vendor, s.shop_building,
+      s.location, s.snag_description
     ].join(" "));
 
     return (!search || text.includes(search)) &&
       (!vendor || s.vendor === vendor) &&
-      (!status ||
-      normalize(s.status) === status ||
-      normalize(s.vendor_decision) === status);
+      (!status || normalize(getDisplayStatus(s)) === status);
   });
 
   const rows = document.getElementById("rows");
@@ -226,9 +265,7 @@ function render() {
 
     const statusTd = document.createElement("td");
     statusTd.className = "status";
-    statusTd.textContent = normalize(s.vendor_decision) === "not possible"
-    ? "Not Possible"
-    : (s.status || "");
+    statusTd.textContent = getDisplayStatus(s);
     tr.appendChild(statusTd);
 
     const actionTd = document.createElement("td");
@@ -273,8 +310,6 @@ document.getElementById("closureForm").addEventListener("submit", async e => {
   button.disabled = true;
   button.textContent = "Saving...";
 
-  let uploadedPath = null;
-
   try {
     const id = document.getElementById("snagId").value;
     const actionTaken = document.getElementById("actionTaken").value.trim();
@@ -291,7 +326,6 @@ document.getElementById("closureForm").addEventListener("submit", async e => {
 
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const photoPath = `closures/${id}_${Date.now()}_${safeName}`;
-    uploadedPath = photoPath;
 
     const uploadResponse = await fetch(
       `${SUPABASE_URL}/storage/v1/object/snag-photos/${photoPath}`,
@@ -308,10 +342,13 @@ document.getElementById("closureForm").addEventListener("submit", async e => {
     );
 
     if (!uploadResponse.ok) {
-      throw new Error(`Photo upload failed (${uploadResponse.status}): ${await uploadResponse.text()}`);
+      throw new Error(
+        `Photo upload failed (${uploadResponse.status}): ${await uploadResponse.text()}`
+      );
     }
 
-    const photoUrl = `${SUPABASE_URL}/storage/v1/object/public/snag-photos/${photoPath}`;
+    const photoUrl =
+      `${SUPABASE_URL}/storage/v1/object/public/snag-photos/${photoPath}`;
 
     const updateResponse = await fetch(
       `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}?id=eq.${encodeURIComponent(id)}`,
@@ -334,7 +371,9 @@ document.getElementById("closureForm").addEventListener("submit", async e => {
     );
 
     if (!updateResponse.ok) {
-      throw new Error(`Database update failed (${updateResponse.status}): ${await updateResponse.text()}`);
+      throw new Error(
+        `Database update failed (${updateResponse.status}): ${await updateResponse.text()}`
+      );
     }
 
     const updatedRows = await updateResponse.json();
