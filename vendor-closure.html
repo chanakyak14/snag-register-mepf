@@ -215,6 +215,9 @@ function render() {
       (!status || normalize(getDisplayStatus(s)) === status);
   });
 
+  const message = document.getElementById("message");
+  message.textContent = `${filtered.length} matching snag records`;
+
   const rows = document.getElementById("rows");
   rows.replaceChildren();
 
