@@ -55,7 +55,7 @@ footer{text-align:center;color:#777;font-size:11px;padding:24px}
 <table>
 <thead><tr>
 <th>ID</th><th>Package</th><th>Vendor</th><th>Shop / Building</th>
-<th>Location</th><th>Snag Point</th><th>Current Status</th>
+<th>Location</th><th>Original Photo</th><th>Snag Point</th><th>Current Status</th>
 <th>Action Taken</th><th>Vendor Decision</th><th>Closure Photo</th>
 </tr></thead>
 <tbody id="rows"><tr><td colspan="10">Loading...</td></tr></tbody>
@@ -129,7 +129,7 @@ function render(){
  const status=document.getElementById("statusFilter").value;
  const filtered=allSnags.filter(s=>{
   const text=[s.id,s.package,s.vendor,s.shop_building,s.location,s.snag_description].join(" ").toLowerCase();
-  return (!search||text.includes(search))&&(!vendor||s.vendor===vendor)&&(!status||s.status===status);
+  return (!search||text.includes(search))&&(!vendor||s.vendor===vendor)&&(!status||(s.status||"").trim().toLowerCase()===status.trim().toLowerCase());
  });
  const rows=document.getElementById("rows");
  rows.replaceChildren();
