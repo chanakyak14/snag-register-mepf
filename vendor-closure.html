@@ -219,7 +219,9 @@ function render() {
 
     const statusTd = document.createElement("td");
     statusTd.className = "status";
-    statusTd.textContent = s.status || "";
+    statusTd.textContent = normalize(s.vendor_decision) === "not possible"
+    ? "Not Possible"
+    : (s.status || "");
     tr.appendChild(statusTd);
 
     const actionTd = document.createElement("td");
