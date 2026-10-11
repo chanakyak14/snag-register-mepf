@@ -206,7 +206,7 @@ function render() {
     return (
       (!search || text.includes(search)) &&
       (!vendor || s.vendor === vendor) &&
-      (!status || normalize(s.status) === status)
+      (!status || normalize(s.status).replace(/^['"]+|['"]+$/g, "") === status)
     );
   });
 
