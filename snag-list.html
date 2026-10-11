@@ -505,10 +505,12 @@ for (let offset = 0; ; offset += pageSize) {
 
 
             snags.sort((a, b) => {
-
-                return new Date(b.raised_on) -
-                       new Date(a.raised_on);
-
+                const dateDiff =
+                    new Date(b.raised_on || 0) - new Date(a.raised_on || 0);
+            
+                if (dateDiff !== 0) return dateDiff;
+            
+                return Number(b.id) - Number(a.id);
             });
 
 
