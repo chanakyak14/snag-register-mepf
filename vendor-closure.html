@@ -319,7 +319,7 @@ document.getElementById("closureForm").addEventListener("submit", async e => {
           vendor_decision: decision,
           closure_photo: photoUrl,
           closure_submitted_at: new Date().toISOString(),
-          status: decision === "Close" ? "Closed" : "Open"
+          status: decision === "Close" ? "Closed" : "Not Possible"
         })
       }
     );
