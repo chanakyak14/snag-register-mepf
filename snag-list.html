@@ -821,26 +821,19 @@
 
             const imageCell =
                 snag.reference_image
-
                 ? `<a
                     href="${snag.reference_image}"
-                    target="_blank">
-                    <img
-                        src="${snag.reference_image}"
-                        class="snag-image"
-                        alt="Snag Photo"
-                        loading="lazy"
-                        decoding="async">
-                   </a>`
-
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="photo-link">View Photo</a>`
                 : "-";
-
-
-            row.innerHTML = `
-
-                <td>
-                    ${snag.id}
-                </td>
+            
+            
+                        row.innerHTML = `
+            
+                            <td>
+                                ${snag.id}
+                            </td>
 
                 <td>
                     ${snag.package || ""}
