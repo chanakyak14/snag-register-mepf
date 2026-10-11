@@ -16,7 +16,7 @@ header p{margin:6px 0 0;color:#b9dfe0;font-size:14px}
 input,select,textarea{font:inherit;padding:10px;border:1px solid #cbd5e1;border-radius:6px}
 .toolbar input,.toolbar select{background:white}
 .table-card{overflow:auto;background:white;border-radius:9px;box-shadow:0 2px 8px #0001}
-table{border-collapse:collapse;width:100%;min-width:1050px}
+table{border-collapse:collapse;width:100%;min-width:1200px}
 th{background:#0b1f3a;color:white;text-align:left;padding:11px;font-size:13px;white-space:nowrap}
 td{padding:10px;border-bottom:1px solid #e5e7eb;font-size:13px;vertical-align:top}
 .snag-link{color:#007f87;font-weight:bold;cursor:pointer;text-decoration:underline}
@@ -36,138 +36,292 @@ footer{text-align:center;color:#777;font-size:11px;padding:24px}
 </style>
 </head>
 <body>
+
 <header>
-<h1>Vendor Snag Closure</h1>
-<p>MEPF Snag Identification & Closure</p>
+  <h1>Vendor Snag Closure</h1>
+  <p>MEPF Snag Identification &amp; Closure</p>
 </header>
+
 <div class="container">
-<div class="toolbar">
-<input id="search" placeholder="Search snag points..." oninput="render()">
-<select id="vendorFilter" onchange="render()"><option value="">All Vendors</option></select>
-<select id="statusFilter" onchange="render()">
-<option value="">All Statuses</option>
-<option>Open</option><option>In Progress</option><option>Closed</option>
-</select>
-<button onclick="loadSnags()">Refresh List</button>
-</div>
-<div id="message">Loading snag records...</div>
-<div class="table-card">
-<table>
-<thead><tr>
-<th>ID</th><th>Package</th><th>Vendor</th><th>Shop / Building</th>
-<th>Location</th><th>Original Photo</th><th>Snag Point</th><th>Current Status</th>
-<th>Action Taken</th><th>Vendor Decision</th><th>Closure Photo</th>
-</tr></thead>
-<tbody id="rows"><tr><td colspan="10">Loading...</td></tr></tbody>
-</table>
-</div>
+  <div class="toolbar">
+    <input id="search" placeholder="Search snag points..." oninput="render()">
+
+    <select id="vendorFilter" onchange="render()">
+      <option value="">All Vendors</option>
+    </select>
+
+    <select id="statusFilter" onchange="render()">
+      <option value="">All Statuses</option>
+      <option value="Open">Open</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Closed">Closed</option>
+    </select>
+
+    <button type="button" onclick="loadSnags()">Refresh List</button>
+  </div>
+
+  <div id="message">Loading snag records...</div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Package</th>
+          <th>Vendor</th>
+          <th>Shop / Building</th>
+          <th>Location</th>
+          <th>Original Photo</th>
+          <th>Snag Point</th>
+          <th>Current Status</th>
+          <th>Action Taken</th>
+          <th>Vendor Decision</th>
+          <th>Closure Photo</th>
+        </tr>
+      </thead>
+      <tbody id="rows">
+        <tr><td colspan="11">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <dialog id="closureDialog">
-<h2>Submit Snag Closure</h2>
-<p id="selectedSnag" class="muted"></p>
-<form id="closureForm">
-<input type="hidden" id="snagId">
-<div class="form-field">
-<label for="actionTaken">Action Taken *</label>
-<textarea id="actionTaken" required placeholder="Describe corrective action taken"></textarea>
-</div>
-<div class="form-field">
-<label for="decision">Decision *</label>
-<select id="decision" required>
-<option value="">Select decision</option>
-<option value="Close">Close</option>
-<option value="Not Possible">Not Possible</option>
-</select>
-</div>
-<div class="form-field">
-<label for="closurePhoto">Closure Photo (camera or upload) *</label>
-<input id="closurePhoto" type="file" accept="image/*" capture="environment" required>
-</div>
-<p class="muted">Saving will be enabled after the database and photo upload are connected.</p>
-<div class="actions">
-<button type="button" class="secondary" onclick="closureDialog.close()">Cancel</button>
-<button type="submit">Submit</button>
-</div>
-</form>
+  <h2>Submit Snag Closure</h2>
+  <p id="selectedSnag" class="muted"></p>
+
+  <form id="closureForm">
+    <input type="hidden" id="snagId">
+
+    <div class="form-field">
+      <label for="actionTaken">Action Taken *</label>
+      <textarea id="actionTaken" required
+        placeholder="Describe corrective action taken"></textarea>
+    </div>
+
+    <div class="form-field">
+      <label for="decision">Decision *</label>
+      <select id="decision" required>
+        <option value="">Select decision</option>
+        <option value="Close">Close</option>
+        <option value="Not Possible">Not Possible</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="closurePhoto">Closure Photo (camera or upload) *</label>
+      <input id="closurePhoto" type="file" accept="image/*"
+        capture="environment" required>
+    </div>
+
+    <p class="muted">
+      Photo upload and database saving are not connected yet.
+    </p>
+
+    <div class="actions">
+      <button type="button" class="secondary"
+        onclick="document.getElementById('closureDialog').close()">Cancel</button>
+      <button type="submit">Submit</button>
+    </div>
+  </form>
 </dialog>
 
 <footer>Developed by Ravi Teja M</footer>
+
 <script>
-const SUPABASE_URL="https://mbetkoyethmcdgdprdcg.supabase.co";
-const SUPABASE_KEY="sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
-const TABLE_NAME="Snag Register _ MEPF";
-let allSnags=[];
+const SUPABASE_URL = "https://mbetkoyethmcdgdprdcg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
+const TABLE_NAME = "Snag Register _ MEPF";
 
-async function loadSnags(){
- const message=document.getElementById("message");
- message.textContent="Loading snag records...";
- try{
-  const url=`${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}?select=*&order=id.desc&limit=2000`;
-  const response=await fetch(url,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
-  if(!response.ok) throw new Error(`Database request failed (${response.status})`);
-  allSnags=await response.json();
-  const vendors=[...new Set(allSnags.map(s=>s.vendor).filter(Boolean))].sort();
-  const filter=document.getElementById("vendorFilter");
-  const previous=filter.value;
-  filter.innerHTML='<option value="">All Vendors</option>';
-  vendors.forEach(v=>{
-   const option=document.createElement("option");
-   option.value=v;option.textContent=v;filter.appendChild(option);
+let allSnags = [];
+
+function normalize(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+async function loadSnags() {
+  const message = document.getElementById("message");
+  message.textContent = "Loading snag records...";
+
+  try {
+    const url =
+      `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}` +
+      `?select=*&order=id.desc&limit=2000`;
+
+    const response = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Database request failed (${response.status})`);
+    }
+
+    allSnags = await response.json();
+
+    const vendors = [
+      ...new Set(allSnags.map(s => s.vendor).filter(Boolean))
+    ].sort();
+
+    const filter = document.getElementById("vendorFilter");
+    const previous = filter.value;
+
+    filter.innerHTML = '<option value="">All Vendors</option>';
+
+    vendors.forEach(v => {
+      const option = document.createElement("option");
+      option.value = v;
+      option.textContent = v;
+      filter.appendChild(option);
+    });
+
+    filter.value = vendors.includes(previous) ? previous : "";
+
+    render();
+    message.textContent = `${allSnags.length} snag records loaded`;
+  } catch (error) {
+    console.error(error);
+    message.textContent =
+      "Unable to load records. Check database access and connection.";
+  }
+}
+
+function render() {
+  const search = normalize(document.getElementById("search").value);
+  const vendor = document.getElementById("vendorFilter").value;
+  const status = normalize(document.getElementById("statusFilter").value);
+
+  const filtered = allSnags.filter(s => {
+    const text = normalize([
+      s.id,
+      s.package,
+      s.vendor,
+      s.shop_building,
+      s.location,
+      s.snag_description
+    ].join(" "));
+
+    return (
+      (!search || text.includes(search)) &&
+      (!vendor || s.vendor === vendor) &&
+      (!status || normalize(s.status) === status)
+    );
   });
-  filter.value=previous;
-  render();
-  message.textContent=`${allSnags.length} snag records loaded`;
- }catch(error){
-  console.error(error);message.textContent="Unable to load records. Check database access and connection.";
- }
+
+  const rows = document.getElementById("rows");
+  rows.replaceChildren();
+
+  if (!filtered.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 11;
+    td.textContent = "No matching snag points.";
+    tr.appendChild(td);
+    rows.appendChild(tr);
+    return;
+  }
+
+  filtered.forEach(s => {
+    const tr = document.createElement("tr");
+
+    const values = [
+      s.id,
+      s.package,
+      s.vendor,
+      s.shop_building,
+      s.location
+    ];
+
+    values.forEach(v => {
+      const td = document.createElement("td");
+      td.textContent = v ?? "";
+      tr.appendChild(td);
+    });
+
+    // Original photo has its own column.
+    const originalPhotoTd = document.createElement("td");
+
+    if (s.reference_image) {
+      const originalLink = document.createElement("a");
+      originalLink.href = s.reference_image;
+      originalLink.target = "_blank";
+      originalLink.rel = "noopener noreferrer";
+      originalLink.textContent = "View Photo";
+      originalPhotoTd.appendChild(originalLink);
+    } else {
+      originalPhotoTd.textContent = "-";
+    }
+
+    tr.appendChild(originalPhotoTd);
+
+    // Clicking the snag point opens the closure form.
+    const snagTd = document.createElement("td");
+    const link = document.createElement("a");
+
+    link.href = "#";
+    link.className = "snag-link";
+    link.textContent = s.snag_description || "(No description)";
+
+    link.addEventListener("click", e => {
+      e.preventDefault();
+      openClosure(s);
+    });
+
+    snagTd.appendChild(link);
+    tr.appendChild(snagTd);
+
+    const statusTd = document.createElement("td");
+    statusTd.className = "status";
+    statusTd.textContent = s.status || "";
+    tr.appendChild(statusTd);
+
+    const actionTd = document.createElement("td");
+    actionTd.textContent = s.action_taken || "-";
+    tr.appendChild(actionTd);
+
+    const decisionTd = document.createElement("td");
+    decisionTd.textContent = s.vendor_decision || "-";
+    tr.appendChild(decisionTd);
+
+    // Closure photo has a separate column.
+    const photoTd = document.createElement("td");
+
+    if (s.closure_photo) {
+      const closureLink = document.createElement("a");
+      closureLink.href = s.closure_photo;
+      closureLink.target = "_blank";
+      closureLink.rel = "noopener noreferrer";
+      closureLink.textContent = "View Photo";
+      photoTd.appendChild(closureLink);
+    } else {
+      photoTd.textContent = "-";
+    }
+
+    tr.appendChild(photoTd);
+    rows.appendChild(tr);
+  });
 }
 
-function render(){
- const search=document.getElementById("search").value.toLowerCase();
- const vendor=document.getElementById("vendorFilter").value;
- const status=document.getElementById("statusFilter").value;
- const filtered=allSnags.filter(s=>{
-  const text=[s.id,s.package,s.vendor,s.shop_building,s.location,s.snag_description].join(" ").toLowerCase();
-  return (!search||text.includes(search))&&(!vendor||s.vendor===vendor)&&(!status||(s.status||"").trim().toLowerCase()===status.trim().toLowerCase());
- });
- const rows=document.getElementById("rows");
- rows.replaceChildren();
- if(!filtered.length){
-  const tr=document.createElement("tr"),td=document.createElement("td");
-  td.colSpan=10;td.textContent="No matching snag points.";tr.appendChild(td);rows.appendChild(tr);return;
- }
- filtered.forEach(s=>{
-  const tr=document.createElement("tr");
-  const values=[s.id,s.package,s.vendor,s.shop_building,s.location];
-  values.forEach(v=>{const td=document.createElement("td");td.textContent=v??"";tr.appendChild(td)});
-  const snagTd=document.createElement("td"),link=document.createElement("a");
-  link.href="#";link.className="snag-link";link.textContent=s.snag_description||"(No description)";
-  link.onclick=e=>{e.preventDefault();openClosure(s)};
-  snagTd.appendChild(link);tr.appendChild(snagTd);
-  const statusTd=document.createElement("td");statusTd.className="status";statusTd.textContent=s.status||"";tr.appendChild(statusTd);
-  const actionTd=document.createElement("td");actionTd.textContent=s.action_taken||"-";tr.appendChild(actionTd);
-  const decisionTd=document.createElement("td");decisionTd.textContent=s.vendor_decision||"-";tr.appendChild(decisionTd);
-  const photoTd=document.createElement("td");
-  if(s.closure_photo){
-   const a=document.createElement("a");a.href=s.closure_photo;a.target="_blank";a.rel="noopener noreferrer";a.textContent="View Photo";photoTd.appendChild(a);
-  }else photoTd.textContent="-";
-  tr.appendChild(photoTd);rows.appendChild(tr);
- });
+function openClosure(s) {
+  document.getElementById("snagId").value = s.id;
+  document.getElementById("selectedSnag").textContent =
+    `ID ${s.id} · ${s.snag_description || ""}`;
+
+  document.getElementById("actionTaken").value = s.action_taken || "";
+  document.getElementById("decision").value = s.vendor_decision || "";
+  document.getElementById("closurePhoto").value = "";
+
+  document.getElementById("closureDialog").showModal();
 }
 
-function openClosure(s){
- document.getElementById("snagId").value=s.id;
- document.getElementById("selectedSnag").textContent=`ID ${s.id} · ${s.snag_description||""}`;
- document.getElementById("actionTaken").value=s.action_taken||"";
- document.getElementById("decision").value=s.vendor_decision||"";
- document.getElementById("closurePhoto").value="";
- document.getElementById("closureDialog").showModal();
-}
-
-document.getElementById("closureForm").addEventListener("submit",e=>{
- e.preventDefault();
- alert("Form layout is ready. Photo upload and database saving will be connected in the next step.");
+document.getElementById("closureForm").addEventListener("submit", e => {
+  e.preventDefault();
+  alert(
+    "The form is not connected to database saving yet. " +
+    "No changes have been saved."
+  );
 });
 
 loadSnags();
