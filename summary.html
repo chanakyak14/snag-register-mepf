@@ -90,7 +90,7 @@
 <table id="packageTable">
   <thead><tr>
     <th>Sr.</th><th>Package</th><th>Vendor</th>
-    <th>Total Snags</th><th>Closed</th><th>Open</th><th>Not Possible</th>
+    <th>Total Snags</th><th>Open</th><th>Closed</th><th>Not Possible</th>
   </tr></thead>
   <tbody></tbody>
   <tfoot></tfoot>
@@ -242,7 +242,7 @@ function renderPackageSummary(records) {
   body.innerHTML = ordered.map((x, i) => `
     <tr><td>${i + 1}</td><td>${escapeHtml(x.package)}</td>
     <td>${escapeHtml(x.vendor)}</td><td>${x.counts.total}</td>
-    <td>${x.counts.closed}</td><td>${x.counts.open}</td>
+    <td>${x.counts.open}</td><td>${x.counts.closed}</td>
     <td>${x.counts.notPossible}</td></tr>`).join("");
 
   const totals = records.reduce((a, s) => {
@@ -251,7 +251,7 @@ function renderPackageSummary(records) {
   }, blankCounts());
 
   foot.innerHTML = `<tr class="total"><td></td><td>Total</td><td></td>
-    <td>${totals.total}</td><td>${totals.closed}</td><td>${totals.open}</td>
+    <td>${totals.total}</td><td>${totals.open}</td><td>${totals.closed}</td>
     <td>${totals.notPossible}</td></tr>`;
 
   document.getElementById("total").textContent = totals.total;
@@ -289,7 +289,7 @@ function renderBuildingSummary(records) {
   thead.innerHTML = `<tr><th rowspan="2">Building</th>${
     vendorNames.map(v => `<th colspan="2">${escapeHtml(v)}</th>`).join("")
   }<th colspan="4">Total</th></tr><tr>${
-    vendorNames.map(() => "<th>Closed</th><th>Open</th>").join("")
+    vendorNames.map(() => "<th>Open</th><th>Closed</th>").join("")
   }<th>Snags</th><th>Closed</th><th>Open</th><th>Not Possible</th></tr>`;
 
   const buildingNames = [...buildingMap.keys()].sort((a, b) => a.localeCompare(b));
@@ -298,7 +298,7 @@ function renderBuildingSummary(records) {
     const row = buildingMap.get(name);
     const cells = vendorNames.map(v => {
       const c = row.vendors.get(v) || blankCounts();
-      return `<td>${c.closed || ""}</td><td>${c.open || ""}</td>`;
+      return `<td>${c.open || ""}</td><td>${c.closed || ""}</td>`;
     }).join("");
     return `<tr><td>${escapeHtml(name)}</td>${cells}
       <td>${row.counts.total}</td><td>${row.counts.closed}</td>
@@ -316,7 +316,7 @@ function renderBuildingSummary(records) {
   tfoot.innerHTML = `<tr class="total"><td>Total</td>${
     vendorNames.map(v => {
       const c = totalsByVendor.get(v);
-      return `<td>${c.closed || ""}</td><td>${c.open || ""}</td>`;
+      return `<td>${c.open || ""}</td><td>${c.closed || ""}</td>`;
     }).join("")
   }<td>${totals.total}</td><td>${totals.closed}</td>
   <td>${totals.open}</td><td>${totals.notPossible}</td></tr>`;
