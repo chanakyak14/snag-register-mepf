@@ -98,8 +98,27 @@ footer{text-align:center;color:#777;font-size:11px;padding:24px}
 
 <div class="form-field">
 <label for="closurePhoto">Closure Photo (camera or upload) *</label>
-<input id="closurePhoto" type="file" accept="image/*" required>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+  <button type="button" onclick="openCamera()">📷 Take Photo</button>
+  <button type="button" onclick="document.getElementById('closurePhoto').click()">📁 Choose File</button>
 </div>
+
+<input
+  id="closurePhoto"
+  type="file"
+  accept="image/*"
+  required
+  style="display:none"
+>
+
+<input
+  id="cameraPhoto"
+  type="file"
+  accept="image/*"
+  capture="environment"
+  style="display:none"
+  onchange="useCameraPhoto(this)"
+></div>
 
 <p class="muted">Submit to save the action, decision and photo.</p>
 <div class="actions">
@@ -305,6 +324,18 @@ function openClosure(s) {
   document.getElementById("closureDialog").showModal();
 }
 
+function openCamera() {
+  document.getElementById("cameraPhoto").click();
+}
+
+function useCameraPhoto(input) {
+  if (input.files && input.files[0]) {
+    const transfer = new DataTransfer();
+    transfer.items.add(input.files[0]);
+    document.getElementById("closurePhoto").files = transfer.files;
+  }
+}
+  
 document.getElementById("closureForm").addEventListener("submit", async e => {
   e.preventDefault();
 
