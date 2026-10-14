@@ -227,12 +227,12 @@ function renderPackageSummary(records) {
 
   const ordered = [];
   for (const p of packages) {
-    const matching = [...map.values()]
-      .filter(x => normalize(x.package) === normalize(p))
-      .sort((a, b) =>
-  b.counts.total - a.counts.total ||
-  a.vendor.localeCompare(b.vendor)
-);
+  const matching = [...map.values()]
+    .filter(x => normalize(x.package) === normalize(p))
+    .sort((a, b) =>
+      b.counts.total - a.counts.total ||
+      a.vendor.localeCompare(b.vendor)
+    );
     ordered.push(...matching);
   }
   const extra = [...map.values()].filter(x =>
