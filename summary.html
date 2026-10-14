@@ -229,7 +229,10 @@ function renderPackageSummary(records) {
   for (const p of packages) {
     const matching = [...map.values()]
       .filter(x => normalize(x.package) === normalize(p))
-      .sort((a, b) => a.vendor.localeCompare(b.vendor));
+      .sort((a, b) =>
+  b.counts.total - a.counts.total ||
+  a.vendor.localeCompare(b.vendor)
+);
     ordered.push(...matching);
   }
   const extra = [...map.values()].filter(x =>
@@ -292,8 +295,10 @@ function renderBuildingSummary(records) {
     vendorNames.map(() => "<th>Open</th><th>Closed</th>").join("")
   }<th>Snags</th><th>Closed</th><th>Open</th><th>Not Possible</th></tr>`;
 
-  const buildingNames = [...buildingMap.keys()].sort((a, b) => a.localeCompare(b));
-
+const buildingNames = [...buildingMap.keys()].sort((a, b) =>
+  buildingMap.get(b).counts.total - buildingMap.get(a).counts.total ||
+  a.localeCompare(b)
+);
   tbody.innerHTML = buildingNames.map(name => {
     const row = buildingMap.get(name);
     const cells = vendorNames.map(v => {
