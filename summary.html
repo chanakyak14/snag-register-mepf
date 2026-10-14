@@ -225,20 +225,11 @@ function renderPackageSummary(records) {
     addStatus(map.get(key).counts, statusOf(s));
   }
 
-  const ordered = [];
-  for (const p of packages) {
-  const matching = [...map.values()]
-    .filter(x => normalize(x.package) === normalize(p))
-    .sort((a, b) =>
-      b.counts.total - a.counts.total ||
-      a.vendor.localeCompare(b.vendor)
-    );
-    ordered.push(...matching);
-  }
-  const extra = [...map.values()].filter(x =>
-    !packages.some(p => normalize(p) === normalize(x.package))
-  ).sort((a, b) => a.package.localeCompare(b.package));
-  ordered.push(...extra);
+ const ordered = [...map.values()].sort((a, b) =>
+   b.counts.total - a.counts.total ||
+   a.package.localeCompare(b.package) ||
+   a.vendor.localeCompare(b.vendor)
+ );
 
   const body = document.querySelector("#packageTable tbody");
   const foot = document.querySelector("#packageTable tfoot");
