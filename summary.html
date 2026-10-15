@@ -4,107 +4,305 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MEPF Snag Summary</title>
+<title>SNAG REVIEW _ CONSOLIDATED</title>
+
 <style>
-  * { box-sizing: border-box; }
+* { box-sizing: border-box; }
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 16px;
+  color: #182b45;
+  font-size: 11px;
+}
+
+h1 { margin: 0; font-size: 21px; }
+h2 { margin: 12px 0 5px; font-size: 13px; }
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px solid #087e8b;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.sub { color: #536477; margin-top: 4px; }
+.actions { display: flex; gap: 6px; }
+
+button {
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 12px;
+  background: #087e8b;
+  color: white;
+  cursor: pointer;
+}
+button.secondary { background: #263b55; }
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.card {
+  border: 1px solid #cbd5df;
+  border-left: 4px solid #087e8b;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.card .label { color: #536477; font-size: 10px; }
+.card .value { font-size: 19px; font-weight: bold; margin-top: 3px; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: auto;
+  font-size: 10px;
+}
+
+th, td {
+  border: 1px solid #cbd5df;
+  padding: 4px 5px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+th { background: #e8f0f5; color: #182b45; }
+td:first-child, th:first-child { text-align: left; }
+tfoot td, tr.total td { background: #e8f0f5; font-weight: bold; }
+
+.building-wrap { overflow-x: auto; }
+#message { margin: 8px 0; color: #536477; }
+.note { margin-top: 6px; color: #536477; font-size: 9px; }
+
+.report-page { margin-bottom: 28px; }
+
+/* Donut chart page */
+.chart-page {
+  min-height: 650px;
+}
+
+.chart-heading {
+  text-align: center;
+  margin: 12px 0 4px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.chart-subheading {
+  text-align: center;
+  color: #536477;
+  margin-bottom: 10px;
+}
+
+.chart-totals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.chart-totals .card {
+  text-align: center;
+  border-left-width: 4px;
+}
+
+.chart-totals .value { font-size: 18px; }
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 470px;
+  margin: 0 auto;
+}
+
+.chart-legend-note {
+  text-align: center;
+  color: #536477;
+  font-size: 9px;
+  margin-top: 5px;
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 7mm;
+  }
+
   body {
-    font-family: Arial, sans-serif;
-    margin: 16px;
-    color: #182b45;
-    font-size: 11px;
+    margin: 0;
+    font-size: 9px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
-  h1 { margin: 0; font-size: 21px; }
-  h2 { margin: 12px 0 5px; font-size: 13px; }
-  .header {
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 3px solid #087e8b; padding-bottom: 8px;
+
+  .actions { display: none !important; }
+
+  .report-page {
+    margin: 0;
+    height: 190mm;
+    overflow: hidden;
+    break-after: page;
+    page-break-after: always;
   }
-  .sub { color: #536477; margin-top: 4px; }
-  .actions { display: flex; gap: 6px; }
-  button {
-    border: 0; border-radius: 4px; padding: 8px 12px;
-    background: #087e8b; color: white; cursor: pointer;
+
+  .report-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
   }
-  button.secondary { background: #263b55; }
-  .cards {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 8px; margin: 10px 0;
+
+  h1 { font-size: 17px; }
+  h2 { margin-top: 7px; font-size: 11px; }
+
+  .cards { margin: 6px 0; gap: 5px; }
+  .card { padding: 5px; }
+  .card .value { font-size: 15px; }
+
+  th, td { padding: 3px; font-size: 8px; }
+  .note { font-size: 8px; }
+
+  .chart-page {
+    height: 190mm;
+    min-height: 0;
   }
-  .card {
-    border: 1px solid #cbd5df; border-left: 4px solid #087e8b;
-    padding: 8px; border-radius: 4px;
+
+  .chart-heading { font-size: 17px; margin-top: 3px; }
+  .chart-subheading { margin-bottom: 4px; }
+  .chart-totals { margin: 5px 0; gap: 6px; }
+  .chart-totals .card { padding: 4px; }
+  .chart-totals .value { font-size: 14px; }
+
+  .chart-container {
+    height: 125mm;
+    max-height: 125mm;
   }
-  .card .label { color: #536477; font-size: 10px; }
-  .card .value { font-size: 19px; font-weight: bold; margin-top: 3px; }
-  table {
-    border-collapse: collapse; width: 100%; table-layout: auto;
-    font-size: 10px;
-  }
-  th, td {
-    border: 1px solid #cbd5df; padding: 4px 5px;
-    text-align: center; overflow-wrap: anywhere;
-  }
-  th { background: #e8f0f5; color: #182b45; }
-  td:first-child, th:first-child { text-align: left; }
-  tfoot td, tr.total td { background: #e8f0f5; font-weight: bold; }
-  .building-wrap { overflow-x: auto; }
-  #message { margin: 8px 0; color: #536477; }
-  .note { margin-top: 6px; color: #536477; font-size: 9px; }
-  @media print {
-    @page { size: A4 landscape; margin: 7mm; }
-    body { margin: 0; font-size: 9px; }
-    .actions { display: none; }
-    h1 { font-size: 17px; }
-    h2 { margin-top: 8px; font-size: 11px; }
-    .cards { margin: 6px 0; gap: 5px; }
-    .card { padding: 5px; }
-    .card .value { font-size: 15px; }
-    th, td { padding: 3px; font-size: 8px; }
-    .note { font-size: 8px; }
-    table { page-break-inside: avoid; }
-  }
+
+  table { page-break-inside: avoid; }
+}
 </style>
 </head>
+
 <body>
-<div class="header">
-  <div>
-    <h1>MEPF SNAG POINTS SUMMARY</h1>
-    <div class="sub" id="reportDate"></div>
+
+<!-- PAGE 1: PACKAGE-WISE SUMMARY -->
+<section class="report-page">
+  <div class="header">
+    <div>
+      <h1>SNAG REVIEW _ CONSOLIDATED</h1>
+      <div class="sub" id="reportDate"></div>
+    </div>
+    <div class="actions">
+      <button class="secondary" onclick="loadSummary()">Refresh</button>
+      <button onclick="window.print()">Print / Save PDF</button>
+    </div>
   </div>
-  <div class="actions">
-    <button class="secondary" onclick="loadSummary()">Refresh</button>
-    <button onclick="window.print()">Print / Save PDF</button>
+
+  <div class="cards">
+    <div class="card">
+      <div class="label">Total Snags</div>
+      <div class="value" id="total">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Closed</div>
+      <div class="value" id="closed">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Open</div>
+      <div class="value" id="open">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Not Possible</div>
+      <div class="value" id="notPossible">—</div>
+    </div>
   </div>
-</div>
 
-<div class="cards">
-  <div class="card"><div class="label">Total Snags</div><div class="value" id="total">—</div></div>
-  <div class="card"><div class="label">Closed</div><div class="value" id="closed">—</div></div>
-  <div class="card"><div class="label">Open</div><div class="value" id="open">—</div></div>
-  <div class="card"><div class="label">Not Possible</div><div class="value" id="notPossible">—</div></div>
-</div>
+  <div id="message">Loading records from database…</div>
 
-<div id="message">Loading records from database…</div>
+  <h2>1. Package-wise Summary</h2>
+  <table id="packageTable">
+    <thead>
+      <tr>
+        <th>Sr.</th><th>Package</th><th>Vendor</th>
+        <th>Total Snags</th><th>Open</th><th>Closed</th>
+        <th>Not Possible</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot></tfoot>
+  </table>
+</section>
 
-<h2>1. Package-wise Summary</h2>
-<table id="packageTable">
-  <thead><tr>
-    <th>Sr.</th><th>Package</th><th>Vendor</th>
-    <th>Total Snags</th><th>Open</th><th>Closed</th><th>Not Possible</th>
-  </tr></thead>
-  <tbody></tbody>
-  <tfoot></tfoot>
-</table>
+<!-- PAGE 2: CONCENTRIC VENDOR DONUT CHART -->
+<section class="report-page chart-page">
+  <div class="header">
+    <div>
+      <h1>SNAG REVIEW _ CONSOLIDATED</h1>
+      <div class="sub" id="chartReportDate"></div>
+    </div>
+  </div>
 
-<h2>2. Building-wise Summary</h2>
-<div class="building-wrap">
-<table id="buildingTable">
-  <thead></thead><tbody></tbody><tfoot></tfoot>
-</table>
-</div>
-<div class="note">
-  Status counts are based on the current database status. WIP and other unclassified statuses are not counted as Open or Closed.
-</div>
+  <div class="chart-heading">Vendor-wise Snag Distribution &amp; Closure Performance</div>
+  <div class="chart-subheading">
+    Total snag contribution and vendor closure performance
+  </div>
+
+  <div class="chart-totals">
+    <div class="card">
+      <div class="label">Total Snags</div>
+      <div class="value" id="chartTotal">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Total Closed</div>
+      <div class="value" id="chartClosed">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Overall Closure</div>
+      <div class="value" id="chartClosureRate">—</div>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="vendorDonut"></canvas>
+  </div>
+
+  <div class="chart-legend-note">
+    Outer labels: Vendor · Total Snags · % of All Snags
+    &nbsp; | &nbsp;
+    Inner labels: Vendor · Closed % · Closed Count
+  </div>
+</section>
+
+<!-- PAGE 3: BUILDING-WISE SUMMARY -->
+<section class="report-page">
+  <div class="header">
+    <div>
+      <h1>SNAG REVIEW _ CONSOLIDATED</h1>
+      <div class="sub" id="buildingReportDate"></div>
+    </div>
+  </div>
+
+  <h2>3. Building-wise Summary</h2>
+  <div class="building-wrap">
+    <table id="buildingTable">
+      <thead></thead>
+      <tbody></tbody>
+      <tfoot></tfoot>
+    </table>
+  </div>
+
+  <div class="note">
+    Status counts are based on current database status. WIP and other
+    unclassified statuses are not counted as Open or Closed.
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
 <script>
 const SUPABASE_URL = "https://mbetkoyethmcdgdprdcg.supabase.co";
@@ -112,35 +310,28 @@ const SUPABASE_KEY = "sb_publishable_K-ro9DWU-qxlFc_V_NqQdg_XLG-kjuv";
 const TABLE_NAME = "Snag Register _ MEPF";
 const PAGE_SIZE = 1000;
 
-const packages = [
-  "Electrical Package",
-  "Fire Protection System",
-  "Ventilation System",
-  "Fuel Yard",
-  "Piping & Supports",
-  "Fire alarm, Public Addressal, BMS",
-  "WTP RO STP",
-  "Treated Fresh Air",
-  "HVAC"
-];
-
 const vendors = [
   "Evio", "Minimax", "Sidharth", "Opserv", "URC",
   "Honeywell", "Rochem", "Blue Star", "Voltas"
 ];
 
+let vendorDonutChart = null;
+
 function normalize(value) {
-  return String(value ?? "")
-    .trim().toLowerCase()
-    .replace(/^['"]+|['"]+$/g, "")
-    .trim();
+  return String(value ?? "").trim().toLowerCase()
+    .replace(/^['"]+|['"]+$/g, "").trim();
 }
 
 function statusOf(s) {
   const decision = normalize(s.vendor_decision);
   const status = normalize(s.status);
-  if (decision === "not possible" || status === "not possible") return "Not Possible";
-  if (decision === "close" || status === "closed" || status === "close") return "Closed";
+
+  if (decision === "not possible" || status === "not possible")
+    return "Not Possible";
+
+  if (decision === "close" || status === "closed" || status === "close")
+    return "Closed";
+
   if (status === "open" || !status) return "Open";
   return "Other";
 }
@@ -162,13 +353,14 @@ function packageLabel(value) {
     "fuel yard": "Fuel Yard",
     "hvac": "HVAC"
   };
+
   return aliases[n] || String(value || "Unspecified");
 }
 
 function vendorLabel(value) {
   const n = normalize(value);
-  const known = vendors.find(v => normalize(v) === n);
-  return known || String(value || "Unspecified");
+  return vendors.find(v => normalize(v) === n) ||
+    String(value || "Unspecified").trim();
 }
 
 function buildingLabel(value) {
@@ -194,64 +386,249 @@ function escapeHtml(value) {
   }[ch]));
 }
 
+function setReportDates() {
+  const date = new Date().toLocaleDateString("en-IN", {
+    day: "2-digit", month: "short", year: "numeric"
+  });
+  document.getElementById("reportDate").textContent = "Reporting date: " + date;
+  document.getElementById("chartReportDate").textContent = "Reporting date: " + date;
+  document.getElementById("buildingReportDate").textContent = "Reporting date: " + date;
+}
+
 async function fetchAllRecords() {
   const all = [];
+
   for (let offset = 0; ; offset += PAGE_SIZE) {
-    const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}` +
-      `?select=id,package,vendor,shop_building,status,vendor_decision&order=id.asc&limit=${PAGE_SIZE}&offset=${offset}`;
+    const url =
+      `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}` +
+      `?select=id,package,vendor,shop_building,status,vendor_decision` +
+      `&order=id.asc&limit=${PAGE_SIZE}&offset=${offset}`;
+
     const response = await fetch(url, {
       headers: {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`
       }
     });
+
     if (!response.ok) {
-      throw new Error(`Database request failed (${response.status}): ${await response.text()}`);
+      throw new Error(
+        `Database request failed (${response.status}): ${await response.text()}`
+      );
     }
+
     const batch = await response.json();
     all.push(...batch);
     if (batch.length < PAGE_SIZE) break;
   }
+
   return all;
+}
+
+function calculateTotals(records) {
+  return records.reduce((a, s) => {
+    addStatus(a, statusOf(s));
+    return a;
+  }, blankCounts());
 }
 
 function renderPackageSummary(records) {
   const map = new Map();
+
   for (const s of records) {
-    const key = packageLabel(s.package) + "||" + vendorLabel(s.vendor);
-    if (!map.has(key)) map.set(key, {
-      package: packageLabel(s.package), vendor: vendorLabel(s.vendor), counts: blankCounts()
-    });
+    const pkg = packageLabel(s.package);
+    const vendor = vendorLabel(s.vendor);
+    const key = pkg + "||" + vendor;
+
+    if (!map.has(key)) {
+      map.set(key, { package: pkg, vendor, counts: blankCounts() });
+    }
     addStatus(map.get(key).counts, statusOf(s));
   }
 
- const ordered = [...map.values()].sort((a, b) =>
-   b.counts.total - a.counts.total ||
-   a.package.localeCompare(b.package) ||
-   a.vendor.localeCompare(b.vendor)
- );
+  // Rank Package + Vendor rows by total snags, highest to lowest.
+  const ordered = [...map.values()].sort((a, b) =>
+    b.counts.total - a.counts.total ||
+    a.package.localeCompare(b.package) ||
+    a.vendor.localeCompare(b.vendor)
+  );
 
-  const body = document.querySelector("#packageTable tbody");
-  const foot = document.querySelector("#packageTable tfoot");
-  body.innerHTML = ordered.map((x, i) => `
-    <tr><td>${i + 1}</td><td>${escapeHtml(x.package)}</td>
-    <td>${escapeHtml(x.vendor)}</td><td>${x.counts.total}</td>
-    <td>${x.counts.open}</td><td>${x.counts.closed}</td>
-    <td>${x.counts.notPossible}</td></tr>`).join("");
+  document.querySelector("#packageTable tbody").innerHTML =
+    ordered.map((x, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${escapeHtml(x.package)}</td>
+        <td>${escapeHtml(x.vendor)}</td>
+        <td>${x.counts.total}</td>
+        <td>${x.counts.open}</td>
+        <td>${x.counts.closed}</td>
+        <td>${x.counts.notPossible}</td>
+      </tr>
+    `).join("");
 
-  const totals = records.reduce((a, s) => {
-    addStatus(a, statusOf(s));
-    return a;
-  }, blankCounts());
+  const totals = calculateTotals(records);
 
-  foot.innerHTML = `<tr class="total"><td></td><td>Total</td><td></td>
-    <td>${totals.total}</td><td>${totals.open}</td><td>${totals.closed}</td>
-    <td>${totals.notPossible}</td></tr>`;
+  document.querySelector("#packageTable tfoot").innerHTML = `
+    <tr class="total">
+      <td></td><td>Total</td><td></td>
+      <td>${totals.total}</td>
+      <td>${totals.open}</td>
+      <td>${totals.closed}</td>
+      <td>${totals.notPossible}</td>
+    </tr>`;
 
   document.getElementById("total").textContent = totals.total;
   document.getElementById("closed").textContent = totals.closed;
   document.getElementById("open").textContent = totals.open;
   document.getElementById("notPossible").textContent = totals.notPossible;
+}
+
+function renderVendorDonut(records) {
+  const map = new Map();
+
+  for (const s of records) {
+    const vendor = vendorLabel(s.vendor);
+    if (!map.has(vendor)) map.set(vendor, blankCounts());
+    addStatus(map.get(vendor), statusOf(s));
+  }
+
+  // Include every vendor found in the database, including unlisted vendors.
+  const vendorNames = [...map.keys()].sort((a, b) => {
+    return map.get(b).total - map.get(a).total || a.localeCompare(b);
+  });
+
+  const totalSnags = records.length;
+  const totalClosed = records.filter(s => statusOf(s) === "Closed").length;
+  const overallRate = totalSnags ? totalClosed / totalSnags * 100 : 0;
+
+  document.getElementById("chartTotal").textContent =
+    totalSnags.toLocaleString();
+  document.getElementById("chartClosed").textContent =
+    totalClosed.toLocaleString();
+  document.getElementById("chartClosureRate").textContent =
+    overallRate.toFixed(1) + "%";
+
+  const totalsData = vendorNames.map(v => map.get(v).total);
+  const closedData = vendorNames.map(v => map.get(v).closed);
+  const closedRates = vendorNames.map(v => {
+    const c = map.get(v);
+    return c.total ? c.closed / c.total * 100 : 0;
+  });
+
+  const palette = [
+    "#087e8b", "#263b55", "#f0a202", "#5b8e7d", "#7b6d8d",
+    "#d1495b", "#30638e", "#6c9a8b", "#a26769", "#748cab",
+    "#d08c60", "#52796f", "#8d99ae", "#bc6c25", "#577590"
+  ];
+
+  const colors = vendorNames.map((_, i) => palette[i % palette.length]);
+  const ctx = document.getElementById("vendorDonut");
+
+  if (vendorDonutChart) vendorDonutChart.destroy();
+
+  if (typeof Chart === "undefined" || typeof ChartDataLabels === "undefined") {
+    document.getElementById("message").textContent =
+      "Chart libraries could not load. Check your internet connection and refresh.";
+    return;
+  }
+
+  Chart.register(ChartDataLabels);
+
+  vendorDonutChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: vendorNames,
+      datasets: [
+        {
+          // Outer ring: vendor total snags
+          label: "Total Snags",
+          data: totalsData,
+          backgroundColor: colors,
+          borderColor: "#ffffff",
+          borderWidth: 2,
+          weight: 1.25,
+          radius: "100%"
+        },
+        {
+          // Inner ring: closed count; label also shows vendor closure rate
+          label: "Closed Snags",
+          data: closedData,
+          backgroundColor: colors,
+          borderColor: "#ffffff",
+          borderWidth: 2,
+          weight: 0.8,
+          radius: "73%"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "35%",
+      layout: { padding: 12 },
+      plugins: {
+        legend: {
+          position: "right",
+          labels: {
+            boxWidth: 11,
+            padding: 8,
+            font: { size: 10 },
+            generateLabels(chart) {
+              return chart.data.labels.map((label, i) => ({
+                text: `${label} — ${totalsData[i]} snags`,
+                fillStyle: colors[i],
+                strokeStyle: colors[i],
+                lineWidth: 1,
+                hidden: false,
+                index: i
+              }));
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              const i = context.dataIndex;
+              if (context.datasetIndex === 0) {
+                const share = totalSnags
+                  ? totalsData[i] / totalSnags * 100 : 0;
+                return `${vendorNames[i]}: ${totalsData[i]} snags (${share.toFixed(1)}%)`;
+              }
+              return `${vendorNames[i]}: ${closedData[i]} closed (${closedRates[i].toFixed(1)}% closure)`;
+            }
+          }
+        },
+        datalabels: {
+          display(context) {
+            const value = context.dataset.data[context.dataIndex];
+            return value > 0;
+          },
+          color: "#ffffff",
+          textAlign: "center",
+          anchor: "center",
+          align: "center",
+          clamp: true,
+          clip: true,
+          font(context) {
+            const count = vendorNames.length;
+            const size = count > 10 ? 7 : count > 7 ? 8 : 9;
+            return { size, weight: "bold" };
+          },
+          formatter(value, context) {
+            const i = context.dataIndex;
+            const vendor = vendorNames[i];
+
+            if (context.datasetIndex === 0) {
+              const share = totalSnags ? value / totalSnags * 100 : 0;
+              return `${vendor}\n${value} | ${share.toFixed(1)}%`;
+            }
+
+            return `${vendor}\n${closedRates[i].toFixed(1)}% | ${closedData[i]}`;
+          }
+        }
+      }
+    }
+  });
 }
 
 function renderBuildingSummary(records) {
@@ -263,10 +640,15 @@ function renderBuildingSummary(records) {
     const status = statusOf(s);
 
     if (!buildingMap.has(building)) {
-      buildingMap.set(building, { vendors: new Map(), counts: blankCounts() });
+      buildingMap.set(building, {
+        vendors: new Map(),
+        counts: blankCounts()
+      });
     }
+
     const row = buildingMap.get(building);
     if (!row.vendors.has(vendor)) row.vendors.set(vendor, blankCounts());
+
     addStatus(row.vendors.get(vendor), status);
     addStatus(row.counts, status);
   }
@@ -280,63 +662,81 @@ function renderBuildingSummary(records) {
   const tbody = document.querySelector("#buildingTable tbody");
   const tfoot = document.querySelector("#buildingTable tfoot");
 
-  thead.innerHTML = `<tr><th rowspan="2">Building</th>${
-    vendorNames.map(v => `<th colspan="2">${escapeHtml(v)}</th>`).join("")
-  }<th colspan="4">Total</th></tr><tr>${
-    vendorNames.map(() => "<th>Open</th><th>Closed</th>").join("")
-  }<th>Snags</th><th>Closed</th><th>Open</th><th>Not Possible</th></tr>`;
+  thead.innerHTML = `
+    <tr>
+      <th rowspan="2">Building</th>
+      ${vendorNames.map(v => `<th colspan="2">${escapeHtml(v)}</th>`).join("")}
+      <th colspan="4">Total</th>
+    </tr>
+    <tr>
+      ${vendorNames.map(() => "<th>Open</th><th>Closed</th>").join("")}
+      <th>Snags</th><th>Closed</th><th>Open</th><th>Not Possible</th>
+    </tr>`;
 
-const buildingNames = [...buildingMap.keys()].sort((a, b) =>
-  buildingMap.get(b).counts.total - buildingMap.get(a).counts.total ||
-  a.localeCompare(b)
-);
+  const buildingNames = [...buildingMap.keys()].sort((a, b) =>
+    buildingMap.get(b).counts.total - buildingMap.get(a).counts.total ||
+    a.localeCompare(b)
+  );
+
   tbody.innerHTML = buildingNames.map(name => {
     const row = buildingMap.get(name);
     const cells = vendorNames.map(v => {
       const c = row.vendors.get(v) || blankCounts();
       return `<td>${c.open || ""}</td><td>${c.closed || ""}</td>`;
     }).join("");
-    return `<tr><td>${escapeHtml(name)}</td>${cells}
-      <td>${row.counts.total}</td><td>${row.counts.closed}</td>
-      <td>${row.counts.open}</td><td>${row.counts.notPossible}</td></tr>`;
+
+    return `<tr>
+      <td>${escapeHtml(name)}</td>${cells}
+      <td>${row.counts.total}</td>
+      <td>${row.counts.closed}</td>
+      <td>${row.counts.open}</td>
+      <td>${row.counts.notPossible}</td>
+    </tr>`;
   }).join("");
 
   const totalsByVendor = new Map(vendorNames.map(v => [v, blankCounts()]));
   const totals = blankCounts();
+
   for (const s of records) {
     const v = vendorLabel(s.vendor);
     addStatus(totalsByVendor.get(v), statusOf(s));
     addStatus(totals, statusOf(s));
   }
 
-  tfoot.innerHTML = `<tr class="total"><td>Total</td>${
-    vendorNames.map(v => {
-      const c = totalsByVendor.get(v);
-      return `<td>${c.open || ""}</td><td>${c.closed || ""}</td>`;
-    }).join("")
-  }<td>${totals.total}</td><td>${totals.closed}</td>
-  <td>${totals.open}</td><td>${totals.notPossible}</td></tr>`;
+  tfoot.innerHTML = `
+    <tr class="total">
+      <td>Total</td>
+      ${vendorNames.map(v => {
+        const c = totalsByVendor.get(v);
+        return `<td>${c.open || ""}</td><td>${c.closed || ""}</td>`;
+      }).join("")}
+      <td>${totals.total}</td>
+      <td>${totals.closed}</td>
+      <td>${totals.open}</td>
+      <td>${totals.notPossible}</td>
+    </tr>`;
 }
 
 async function loadSummary() {
   const message = document.getElementById("message");
   message.textContent = "Loading all database records…";
+
   try {
     const records = await fetchAllRecords();
+
     renderPackageSummary(records);
+    renderVendorDonut(records);
     renderBuildingSummary(records);
-    message.textContent = `${records.length.toLocaleString()} records loaded from the database.`;
+
+    message.textContent =
+      `${records.length.toLocaleString()} records loaded from the database.`;
   } catch (error) {
     console.error(error);
     message.textContent = `Unable to load summary: ${error.message}`;
   }
 }
 
-document.getElementById("reportDate").textContent =
-  "Reporting date: " + new Date().toLocaleDateString("en-IN", {
-    day: "2-digit", month: "short", year: "numeric"
-  });
-
+setReportDates();
 loadSummary();
 </script>
 </body>
