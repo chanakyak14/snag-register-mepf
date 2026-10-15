@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,6 +13,7 @@ body {
   margin: 16px;
   color: #182b45;
   font-size: 11px;
+  min-width: 1100px;
 }
 
 h1 { margin: 0; font-size: 21px; }
@@ -80,11 +80,15 @@ tfoot td, tr.total td { background: #e8f0f5; font-weight: bold; }
 #message { margin: 8px 0; color: #536477; }
 .note { margin-top: 6px; color: #536477; font-size: 9px; }
 
-.report-page { margin-bottom: 28px; }
+.report-page {
+  width: 100%;
+  margin-bottom: 28px;
+}
 
-/* Donut chart page */
+/* PAGE 2: DONUT CHARTS */
+
 .chart-page {
-  min-height: 650px;
+  min-height: 850px;
 }
 
 .chart-heading {
@@ -114,11 +118,32 @@ tfoot td, tr.total td { background: #e8f0f5; font-weight: bold; }
 
 .chart-totals .value { font-size: 18px; }
 
-.chart-container {
+.donut-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.donut-panel {
+  min-width: 0;
+  border: 1px solid #cbd5df;
+  border-radius: 6px;
+  padding: 8px;
+  background: #fff;
+}
+
+.donut-panel h2 {
+  text-align: center;
+  font-size: 15px;
+  margin: 4px 0 8px;
+  color: #182b45;
+}
+
+.donut-canvas {
   position: relative;
   width: 100%;
-  height: 470px;
-  margin: 0 auto;
+  height: 600px;
 }
 
 .chart-legend-note {
@@ -128,19 +153,6 @@ tfoot td, tr.total td { background: #e8f0f5; font-weight: bold; }
   margin-top: 5px;
 }
 
-/* Desktop-first report layout */
-body {
-  min-width: 1100px;
-}
-
-.report-page {
-  width: 100%;
-}
-
-.chart-page {
-  min-height: 850px;
-}
-  
 @media print {
   @page {
     size: A4 landscape;
@@ -149,6 +161,7 @@ body {
 
   body {
     margin: 0;
+    min-width: 0;
     font-size: 9px;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
@@ -184,18 +197,20 @@ body {
     min-height: 0;
   }
 
-  .chart-heading { font-size: 17px; margin-top: 3px; }
+  .chart-heading {
+    font-size: 15px;
+    margin-top: 3px;
+  }
+
   .chart-subheading { margin-bottom: 4px; }
   .chart-totals { margin: 5px 0; gap: 6px; }
   .chart-totals .card { padding: 4px; }
   .chart-totals .value { font-size: 14px; }
 
-  .chart-container {
-    position: relative;
-    width: 100%;
-    height: 650px;
-    margin: 0 auto;
-  }
+  .donut-grid { gap: 5px; }
+  .donut-panel { padding: 3px; }
+  .donut-panel h2 { font-size: 10px; margin: 2px 0; }
+  .donut-canvas { height: 125mm; }
 
   table { page-break-inside: avoid; }
 }
@@ -242,8 +257,12 @@ body {
   <table id="packageTable">
     <thead>
       <tr>
-        <th>Sr.</th><th>Package</th><th>Vendor</th>
-        <th>Total Snags</th><th>Open</th><th>Closed</th>
+        <th>Sr.</th>
+        <th>Package</th>
+        <th>Vendor</th>
+        <th>Total Snags</th>
+        <th>Open</th>
+        <th>Closed</th>
         <th>Not Possible</th>
       </tr>
     </thead>
@@ -252,7 +271,7 @@ body {
   </table>
 </section>
 
-<!-- PAGE 2: CONCENTRIC VENDOR DONUT CHART -->
+<!-- PAGE 2: TWO VENDOR DONUT CHARTS -->
 <section class="report-page chart-page">
   <div class="header">
     <div>
@@ -261,9 +280,11 @@ body {
     </div>
   </div>
 
-  <div class="chart-heading">Vendor-wise Snag Distribution &amp; Closure Performance</div>
+  <div class="chart-heading">
+    Vendor-wise Snag Distribution &amp; Closure Performance
+  </div>
   <div class="chart-subheading">
-    Total snag contribution and vendor closure performance
+    Total snags and closed snags by vendor
   </div>
 
   <div class="chart-totals">
@@ -281,14 +302,25 @@ body {
     </div>
   </div>
 
-  <div class="chart-container">
-    <canvas id="vendorDonut"></canvas>
+  <div class="donut-grid">
+    <div class="donut-panel">
+      <h2>Civil &amp; Interiors</h2>
+      <div class="donut-canvas">
+        <canvas id="civilInteriorsDonut"></canvas>
+      </div>
+    </div>
+
+    <div class="donut-panel">
+      <h2>All Other Vendors</h2>
+      <div class="donut-canvas">
+        <canvas id="otherVendorsDonut"></canvas>
+      </div>
+    </div>
   </div>
 
   <div class="chart-legend-note">
-    Outer labels: Vendor · Total Snags · % of All Snags
-    &nbsp; | &nbsp;
-    Inner labels: Vendor · Closed % · Closed Count
+    Outer ring: total snags and share of all snags.
+    Inner ring: closed count and vendor closure percentage.
   </div>
 </section>
 
@@ -330,7 +362,7 @@ const vendors = [
   "Honeywell", "Rochem", "Blue Star", "Voltas"
 ];
 
-let vendorDonutChart = null;
+const chartInstances = {};
 
 function normalize(value) {
   return String(value ?? "").trim().toLowerCase()
@@ -405,9 +437,13 @@ function setReportDates() {
   const date = new Date().toLocaleDateString("en-IN", {
     day: "2-digit", month: "short", year: "numeric"
   });
-  document.getElementById("reportDate").textContent = "Reporting date: " + date;
-  document.getElementById("chartReportDate").textContent = "Reporting date: " + date;
-  document.getElementById("buildingReportDate").textContent = "Reporting date: " + date;
+
+  document.getElementById("reportDate").textContent =
+    "Reporting date: " + date;
+  document.getElementById("chartReportDate").textContent =
+    "Reporting date: " + date;
+  document.getElementById("buildingReportDate").textContent =
+    "Reporting date: " + date;
 }
 
 async function fetchAllRecords() {
@@ -434,6 +470,7 @@ async function fetchAllRecords() {
 
     const batch = await response.json();
     all.push(...batch);
+
     if (batch.length < PAGE_SIZE) break;
   }
 
@@ -458,10 +495,10 @@ function renderPackageSummary(records) {
     if (!map.has(key)) {
       map.set(key, { package: pkg, vendor, counts: blankCounts() });
     }
+
     addStatus(map.get(key).counts, statusOf(s));
   }
 
-  // Rank Package + Vendor rows by total snags, highest to lowest.
   const ordered = [...map.values()].sort((a, b) =>
     b.counts.total - a.counts.total ||
     a.package.localeCompare(b.package) ||
@@ -498,23 +535,91 @@ function renderPackageSummary(records) {
   document.getElementById("notPossible").textContent = totals.notPossible;
 }
 
+/* Draw leader lines from each visible arc toward the external labels. */
+const leaderLinesPlugin = {
+  id: "leaderLines",
+
+  afterDatasetsDraw(chart, args, options) {
+    const ctx = chart.ctx;
+    const datasetIndex = 0;
+    const meta = chart.getDatasetMeta(datasetIndex);
+
+    if (!meta || !meta.data) return;
+
+    ctx.save();
+    ctx.strokeStyle = options.color || "#7b8794";
+    ctx.lineWidth = 1;
+
+    meta.data.forEach((arc, index) => {
+      const value = chart.data.datasets[datasetIndex].data[index];
+      if (!value || !arc) return;
+
+      const angle = (arc.startAngle + arc.endAngle) / 2;
+      const startRadius = arc.outerRadius;
+      const endRadius = startRadius + 13;
+
+      const x1 = arc.x + Math.cos(angle) * (startRadius - 1);
+      const y1 = arc.y + Math.sin(angle) * (startRadius - 1);
+      const x2 = arc.x + Math.cos(angle) * endRadius;
+      const y2 = arc.y + Math.sin(angle) * endRadius;
+
+      const x3 = x2 + (Math.cos(angle) >= 0 ? 12 : -12);
+      const y3 = y2;
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(x3, y3);
+      ctx.stroke();
+    });
+
+    ctx.restore();
+  }
+};
+
 function renderVendorDonut(records) {
-  const map = new Map();
+  if (typeof Chart === "undefined" ||
+      typeof ChartDataLabels === "undefined") {
+    document.getElementById("message").textContent =
+      "Chart libraries could not load. Check your internet connection and refresh.";
+    return;
+  }
+
+  Chart.register(ChartDataLabels, leaderLinesPlugin);
+
+  const vendorMap = new Map();
 
   for (const s of records) {
     const vendor = vendorLabel(s.vendor);
-    if (!map.has(vendor)) map.set(vendor, blankCounts());
-    addStatus(map.get(vendor), statusOf(s));
+
+    if (!vendorMap.has(vendor)) {
+      vendorMap.set(vendor, blankCounts());
+    }
+
+    addStatus(vendorMap.get(vendor), statusOf(s));
   }
 
-  // Include every vendor found in the database, including unlisted vendors.
-  const vendorNames = [...map.keys()].sort((a, b) => {
-    return map.get(b).total - map.get(a).total || a.localeCompare(b);
+  const allVendors = [...vendorMap.keys()];
+
+  /*
+    Grouping is based on the VENDOR field:
+    Civil & Interiors = vendor names containing "civil" or "interior".
+    All remaining vendors are placed in the second chart.
+  */
+  const civilInteriors = allVendors.filter(v => {
+    const name = normalize(v);
+    return name.includes("civil") || name.includes("interior");
   });
+
+  const otherVendors = allVendors.filter(v =>
+    !civilInteriors.includes(v)
+  );
 
   const totalSnags = records.length;
   const totalClosed = records.filter(s => statusOf(s) === "Closed").length;
-  const overallRate = totalSnags ? totalClosed / totalSnags * 100 : 0;
+  const overallRate = totalSnags
+    ? totalClosed / totalSnags * 100
+    : 0;
 
   document.getElementById("chartTotal").textContent =
     totalSnags.toLocaleString();
@@ -523,112 +628,183 @@ function renderVendorDonut(records) {
   document.getElementById("chartClosureRate").textContent =
     overallRate.toFixed(1) + "%";
 
-  const totalsData = vendorNames.map(v => map.get(v).total);
-  const closedData = vendorNames.map(v => map.get(v).closed);
-  const closedRates = vendorNames.map(v => {
-    const c = map.get(v);
-    return c.total ? c.closed / c.total * 100 : 0;
-  });
-
   const palette = [
     "#087e8b", "#263b55", "#f0a202", "#5b8e7d", "#7b6d8d",
     "#d1495b", "#30638e", "#6c9a8b", "#a26769", "#748cab",
-    "#d08c60", "#52796f", "#8d99ae", "#bc6c25", "#577590"
+    "#d08c60", "#52796f", "#8d99ae", "#bc6c25", "#577590",
+    "#6a4c93", "#1982c4", "#8ac926", "#ff595e", "#ffca3a"
   ];
 
-  const colors = vendorNames.map((_, i) => palette[i % palette.length]);
-  const ctx = document.getElementById("vendorDonut");
+  function createDonut(canvasId, vendorNames) {
+    const canvas = document.getElementById(canvasId);
 
-  if (vendorDonutChart) vendorDonutChart.destroy();
+    if (chartInstances[canvasId]) {
+      chartInstances[canvasId].destroy();
+      delete chartInstances[canvasId];
+    }
 
-  if (typeof Chart === "undefined" || typeof ChartDataLabels === "undefined") {
-    document.getElementById("message").textContent =
-      "Chart libraries could not load. Check your internet connection and refresh.";
-    return;
-  }
+    if (vendorNames.length === 0) {
+      const parent = canvas.parentElement;
+      parent.innerHTML =
+        '<div style="text-align:center;padding-top:200px;color:#536477;">No matching vendor records found.</div>';
+      return;
+    }
 
-  Chart.register(ChartDataLabels);
+    /*
+      Sort each chart by total snags, highest first.
+      The inner ring represents closed snag counts.
+    */
+    vendorNames = [...vendorNames].sort((a, b) =>
+      vendorMap.get(b).total - vendorMap.get(a).total ||
+      a.localeCompare(b)
+    );
 
-  vendorDonutChart = new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: vendorNames,
-      datasets: [
-        {
-          // Outer ring: vendor total snags
-          label: "Total Snags",
-          data: totalsData,
-          backgroundColor: colors,
-          borderColor: "#ffffff",
-          borderWidth: 2,
-          weight: 1.25,
-          radius: "100%"
-        },
-        {
-          // Inner ring: closed count; label also shows vendor closure rate
-          label: "Closed Snags",
-          data: closedData,
-          backgroundColor: colors,
-          borderColor: "#ffffff",
-          borderWidth: 2,
-          weight: 0.8,
-          radius: "73%"
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: "35%",
-      layout: { padding: 12 },
-      plugins: {
-      legend: {
-        display: false
+    const totalData = vendorNames.map(v => vendorMap.get(v).total);
+    const closedData = vendorNames.map(v => vendorMap.get(v).closed);
+
+    const totalShares = vendorNames.map((v, i) =>
+      totalSnags ? totalData[i] / totalSnags * 100 : 0
+    );
+
+    const closureRates = vendorNames.map((v, i) =>
+      totalData[i] ? closedData[i] / totalData[i] * 100 : 0
+    );
+
+    const colors = vendorNames.map((v, i) =>
+      palette[i % palette.length]
+    );
+
+    chartInstances[canvasId] = new Chart(canvas, {
+      type: "doughnut",
+
+      data: {
+        labels: vendorNames,
+
+        datasets: [
+          {
+            label: "Total Snags",
+            data: totalData,
+            backgroundColor: colors,
+            borderColor: "#ffffff",
+            borderWidth: 2,
+            weight: 1.2
+          },
+          {
+            label: "Closed Snags",
+            data: closedData,
+            backgroundColor: colors.map(color => color),
+            borderColor: "#ffffff",
+            borderWidth: 2,
+            weight: 0.8
+          }
+        ]
       },
-        tooltip: {
-          callbacks: {
-            label(context) {
-              const i = context.dataIndex;
-              if (context.datasetIndex === 0) {
-                const share = totalSnags
-                  ? totalsData[i] / totalSnags * 100 : 0;
-                return `${vendorNames[i]}: ${totalsData[i]} snags (${share.toFixed(1)}%)`;
-              }
-              return `${vendorNames[i]}: ${closedData[i]} closed (${closedRates[i].toFixed(1)}% closure)`;
-            }
+
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "42%",
+        radius: "72%",
+
+        layout: {
+          padding: {
+            top: 35,
+            right: 70,
+            bottom: 35,
+            left: 70
           }
         },
-        datalabels: {
-          display(context) {
-            const value = context.dataset.data[context.dataIndex];
-            return value > 0;
-          },
-          color: "#ffffff",
-          textAlign: "center",
-          anchor: "center",
-          align: "center",
-          clamp: true,
-          clip: true,
-          font(context) {
-            const count = vendorNames.length;
-            const size = count > 10 ? 7 : count > 7 ? 8 : 9;
-            return { size, weight: "bold" };
-          },
-          formatter(value, context) {
-            const i = context.dataIndex;
-            const vendor = vendorNames[i];
 
-            if (context.datasetIndex === 0) {
-              const share = totalSnags ? value / totalSnags * 100 : 0;
-              return `${vendor}\n${value} | ${share.toFixed(1)}%`;
+        plugins: {
+          legend: {
+            display: false
+          },
+
+          leaderLines: {
+            color: "#7b8794"
+          },
+
+          tooltip: {
+            callbacks: {
+              label(context) {
+                const i = context.dataIndex;
+                const vendor = vendorNames[i];
+
+                if (context.datasetIndex === 0) {
+                  return [
+                    `${vendor}`,
+                    `Total snags: ${totalData[i]}`,
+                    `${totalShares[i].toFixed(1)}% of all snags`
+                  ];
+                }
+
+                return [
+                  `${vendor}`,
+                  `Closed: ${closedData[i]}`,
+                  `Closure: ${closureRates[i].toFixed(1)}%`
+                ];
+              }
             }
+          },
 
-            return `${vendor}\n${closedRates[i].toFixed(1)}% | ${closedData[i]}`;
+          datalabels: {
+            display(context) {
+              return Number(context.dataset.data[context.dataIndex]) > 0;
+            },
+
+            color: "#182b45",
+            textAlign: "center",
+            clamp: true,
+            clip: false,
+
+            anchor(context) {
+              return context.datasetIndex === 0 ? "end" : "end";
+            },
+
+            align(context) {
+              return context.datasetIndex === 0 ? "end" : "end";
+            },
+
+            offset(context) {
+              return context.datasetIndex === 0 ? 18 : 36;
+            },
+
+            font(context) {
+              const count = vendorNames.length;
+              const size = count > 12 ? 8 : count > 8 ? 9 : 10;
+
+              return {
+                size,
+                weight: "bold"
+              };
+            },
+
+            formatter(value, context) {
+              const i = context.dataIndex;
+              const vendor = vendorNames[i];
+
+              if (context.datasetIndex === 0) {
+                return [
+                  vendor,
+                  `Total: ${totalData[i]}`,
+                  `${totalShares[i].toFixed(1)}% of all`
+                ];
+              }
+
+              return [
+                vendor,
+                `Closed: ${closedData[i]}`,
+                `Closure: ${closureRates[i].toFixed(1)}%`
+              ];
+            }
           }
         }
       }
-    }
-  });
+    });
+  }
+
+  createDonut("civilInteriorsDonut", civilInteriors);
+  createDonut("otherVendorsDonut", otherVendors);
 }
 
 function renderBuildingSummary(records) {
@@ -647,7 +823,10 @@ function renderBuildingSummary(records) {
     }
 
     const row = buildingMap.get(building);
-    if (!row.vendors.has(vendor)) row.vendors.set(vendor, blankCounts());
+
+    if (!row.vendors.has(vendor)) {
+      row.vendors.set(vendor, blankCounts());
+    }
 
     addStatus(row.vendors.get(vendor), status);
     addStatus(row.counts, status);
@@ -655,7 +834,8 @@ function renderBuildingSummary(records) {
 
   const vendorNames = [...new Set([
     ...vendors,
-    ...records.map(s => vendorLabel(s.vendor)).filter(v => !vendors.includes(v))
+    ...records.map(s => vendorLabel(s.vendor))
+      .filter(v => !vendors.includes(v))
   ])];
 
   const thead = document.querySelector("#buildingTable thead");
@@ -665,12 +845,19 @@ function renderBuildingSummary(records) {
   thead.innerHTML = `
     <tr>
       <th rowspan="2">Building</th>
-      ${vendorNames.map(v => `<th colspan="2">${escapeHtml(v)}</th>`).join("")}
+      ${vendorNames.map(v =>
+        `<th colspan="2">${escapeHtml(v)}</th>`
+      ).join("")}
       <th colspan="4">Total</th>
     </tr>
     <tr>
-      ${vendorNames.map(() => "<th>Open</th><th>Closed</th>").join("")}
-      <th>Snags</th><th>Closed</th><th>Open</th><th>Not Possible</th>
+      ${vendorNames.map(() =>
+        "<th>Open</th><th>Closed</th>"
+      ).join("")}
+      <th>Snags</th>
+      <th>Closed</th>
+      <th>Open</th>
+      <th>Not Possible</th>
     </tr>`;
 
   const buildingNames = [...buildingMap.keys()].sort((a, b) =>
@@ -680,13 +867,15 @@ function renderBuildingSummary(records) {
 
   tbody.innerHTML = buildingNames.map(name => {
     const row = buildingMap.get(name);
+
     const cells = vendorNames.map(v => {
       const c = row.vendors.get(v) || blankCounts();
       return `<td>${c.open || ""}</td><td>${c.closed || ""}</td>`;
     }).join("");
 
     return `<tr>
-      <td>${escapeHtml(name)}</td>${cells}
+      <td>${escapeHtml(name)}</td>
+      ${cells}
       <td>${row.counts.total}</td>
       <td>${row.counts.closed}</td>
       <td>${row.counts.open}</td>
@@ -694,7 +883,9 @@ function renderBuildingSummary(records) {
     </tr>`;
   }).join("");
 
-  const totalsByVendor = new Map(vendorNames.map(v => [v, blankCounts()]));
+  const totalsByVendor = new Map(
+    vendorNames.map(v => [v, blankCounts()])
+  );
   const totals = blankCounts();
 
   for (const s of records) {
@@ -732,7 +923,8 @@ async function loadSummary() {
       `${records.length.toLocaleString()} records loaded from the database.`;
   } catch (error) {
     console.error(error);
-    message.textContent = `Unable to load summary: ${error.message}`;
+    message.textContent =
+      `Unable to load summary: ${error.message}`;
   }
 }
 
