@@ -582,24 +582,9 @@ function renderVendorDonut(records) {
       cutout: "35%",
       layout: { padding: 12 },
       plugins: {
-        legend: {
-          position: "right",
-          labels: {
-            boxWidth: 11,
-            padding: 8,
-            font: { size: 10 },
-            generateLabels(chart) {
-              return chart.data.labels.map((label, i) => ({
-                text: `${label} — ${totalsData[i]} snags`,
-                fillStyle: colors[i],
-                strokeStyle: colors[i],
-                lineWidth: 1,
-                hidden: false,
-                index: i
-              }));
-            }
-          }
-        },
+      legend: {
+        display: false
+      },
         tooltip: {
           callbacks: {
             label(context) {
