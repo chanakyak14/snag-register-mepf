@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -414,6 +415,23 @@
                         Reference Image
                     </th>
 
+                    <!-- Added closure columns -->
+                    <th>
+                        Action Taken
+                    </th>
+
+                    <th>
+                        Vendor Decision
+                    </th>
+
+                    <th>
+                        Closure Photo
+                    </th>
+
+                    <th>
+                        Closure Submitted On
+                    </th>
+
                 </tr>
 
             </thead>
@@ -422,7 +440,7 @@
 
                 <tr>
 
-                    <td colspan="10" class="no-data">
+                    <td colspan="14" class="no-data">
                         Loading snags...
                     </td>
 
@@ -530,7 +548,7 @@ for (let offset = 0; ; offset += pageSize) {
 
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="no-data">
+                    <td colspan="14" class="no-data">
                         Unable to load snag records.
                     </td>
                 </tr>
@@ -791,7 +809,7 @@ for (let offset = 0; ; offset += pageSize) {
 
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="no-data">
+                    <td colspan="14" class="no-data">
                         No snags found for selected filters.
                     </td>
                 </tr>
@@ -824,10 +842,36 @@ for (let offset = 0; ; offset += pageSize) {
                 : "";
 
 
+            const closureSubmittedAt =
+                snag.closure_submitted_at
+
+                ? new Date(
+                    snag.closure_submitted_at
+                  ).toLocaleString(
+                    "en-IN",
+                    {
+                        timeZone:
+                            "Asia/Kolkata"
+                    }
+                  )
+
+                : "";
+
+
             const imageCell =
                 snag.reference_image
                 ? `<a
                     href="${snag.reference_image}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="photo-link">View Photo</a>`
+                : "-";
+
+
+            const closureImageCell =
+                snag.closure_photo
+                ? `<a
+                    href="${snag.closure_photo}"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="photo-link">View Photo</a>`
@@ -874,6 +918,22 @@ for (let offset = 0; ; offset += pageSize) {
 
                 <td>
                     ${imageCell}
+                </td>
+
+                <td>
+                    ${snag.action_taken || ""}
+                </td>
+
+                <td>
+                    ${snag.vendor_decision || ""}
+                </td>
+
+                <td>
+                    ${closureImageCell}
+                </td>
+
+                <td>
+                    ${closureSubmittedAt}
                 </td>
 
             `;
@@ -1004,6 +1064,30 @@ for (let offset = 0; ; offset += pageSize) {
                     header: "Reference Image",
                     key: "reference_image",
                     width: 18
+                },
+
+                {
+                    header: "Action Taken",
+                    key: "action_taken",
+                    width: 40
+                },
+
+                {
+                    header: "Vendor Decision",
+                    key: "vendor_decision",
+                    width: 30
+                },
+
+                {
+                    header: "Closure Photo",
+                    key: "closure_photo",
+                    width: 18
+                },
+
+                {
+                    header: "Closure Submitted On",
+                    key: "closure_submitted_at",
+                    width: 22
                 }
 
             ];
@@ -1016,6 +1100,22 @@ for (let offset = 0; ; offset += pageSize) {
 
                     ? new Date(
                         snag.raised_on
+                      ).toLocaleString(
+                        "en-IN",
+                        {
+                            timeZone:
+                                "Asia/Kolkata"
+                        }
+                      )
+
+                    : "";
+
+
+                const closureSubmittedAt =
+                    snag.closure_submitted_at
+
+                    ? new Date(
+                        snag.closure_submitted_at
                       ).toLocaleString(
                         "en-IN",
                         {
@@ -1057,7 +1157,19 @@ for (let offset = 0; ; offset += pageSize) {
                         snag.status || "",
 
                     reference_image:
-                        ""
+                        "",
+
+                    action_taken:
+                        snag.action_taken || "",
+
+                    vendor_decision:
+                        snag.vendor_decision || "",
+
+                    closure_photo:
+                        "",
+
+                    closure_submitted_at:
+                        closureSubmittedAt
 
                 });
 
@@ -1302,6 +1414,83 @@ for (let offset = 0; ; offset += pageSize) {
 
                     console.error(
                         "Image processing failed:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            /*
+             * Add compressed closure images
+             */
+
+            for (
+                let i = 0;
+                i < snags.length;
+                i++
+            ) {
+
+                const snag =
+                    snags[i];
+
+
+                if (
+                    !snag.closure_photo
+                ) {
+                    continue;
+                }
+
+
+                try {
+
+                    downloadButton.textContent =
+                        `Closure Photo ${i + 1}/${snags.length}`;
+
+
+                    const compressedBlob =
+                        await compressImage(
+                            snag.closure_photo
+                        );
+
+
+                    const arrayBuffer =
+                        await compressedBlob.arrayBuffer();
+
+
+                    const imageId =
+                        workbook.addImage({
+
+                            buffer:
+                                arrayBuffer,
+
+                            extension:
+                                "jpeg"
+
+                        });
+
+
+                    worksheet.addImage(
+                        imageId,
+                        {
+
+                            tl: {
+                                col: 12,
+                                row: i + 1
+                            },
+                            br: {
+                                col: 13,
+                                row: i + 2
+                            },
+
+                        }
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "Closure image processing failed:",
                         error
                     );
 
