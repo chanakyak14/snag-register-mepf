@@ -127,6 +127,15 @@
             position: relative;
         }
 
+        .sortable-heading {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable-heading:hover {
+            background: #16345f;
+        }
+
         td {
             padding: 11px 10px;
             border-bottom: 1px solid #e5e7eb;
@@ -416,6 +425,7 @@
                     </th>
 
                     <!-- Added closure columns -->
+
                     <th>
                         Action Taken
                     </th>
@@ -428,8 +438,12 @@
                         Closure Photo
                     </th>
 
-                    <th>
+                    <th
+                        class="sortable-heading"
+                        onclick="toggleClosureSort()"
+                        title="Click to sort">
                         Closure Submitted On
+                        <span id="closureSortIcon">↕</span>
                     </th>
 
                 </tr>
@@ -439,11 +453,9 @@
             <tbody id="snagTableBody">
 
                 <tr>
-
                     <td colspan="14" class="no-data">
                         Loading snags...
                     </td>
-
                 </tr>
 
             </tbody>
@@ -480,6 +492,13 @@
         status: ""
     };
 
+    // Closure sorting:
+    // 0 = Original order
+    // 1 = Descending
+    // 2 = Ascending
+
+    let closureSortState = 0;
+
 
     async function loadSnags(masterMode = false) {
 
@@ -492,59 +511,60 @@
 
         try {
 
-let snags = [];
-const pageSize = 1000;
+            let snags = [];
+            const pageSize = 1000;
 
-for (let offset = 0; ; offset += pageSize) {
-    const limit = masterMode ? pageSize : 10;
+            for (let offset = 0; ; offset += pageSize) {
 
-    const url =
-        `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}` +
-        `?select=*&order=raised_on.desc&limit=${limit}` +
-        (masterMode ? `&offset=${offset}` : "");
+                const limit = masterMode ? pageSize : 10;
 
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    "apikey": SUPABASE_KEY,
-                    "Authorization": `Bearer ${SUPABASE_KEY}`
+                const url =
+                    `${SUPABASE_URL}/rest/v1/${encodeURIComponent(TABLE_NAME)}` +
+                    `?select=*&order=raised_on.desc&limit=${limit}` +
+                    (masterMode ? `&offset=${offset}` : "");
+
+                const response = await fetch(url, {
+                    method: "GET",
+                    headers: {
+                        "apikey": SUPABASE_KEY,
+                        "Authorization": `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to load snags: " + await response.text());
                 }
-            });
-        
-            if (!response.ok) {
-                throw new Error("Failed to load snags: " + await response.text());
+
+                const page = await response.json();
+                snags.push(...page);
+
+                if (!masterMode || page.length < pageSize) break;
             }
-        
-            const page = await response.json();
-            snags.push(...page);
-        
-            if (!masterMode || page.length < pageSize) break;
-        }
 
 
             snags.sort((a, b) => {
+
                 const dateDiff =
-                    new Date(b.raised_on || 0) - new Date(a.raised_on || 0);
-            
+                    new Date(b.raised_on || 0) -
+                    new Date(a.raised_on || 0);
+
                 if (dateDiff !== 0) return dateDiff;
-            
+
                 return Number(b.id) - Number(a.id);
+
             });
 
 
             allSnags = snags;
 
-
             populateFilters();
 
-
-            displaySnags(allSnags);
+            displaySnags(getSortedFilteredSnags());
 
 
         } catch (error) {
 
             console.error(error);
-
 
             tableBody.innerHTML = `
                 <tr>
@@ -554,10 +574,7 @@ for (let offset = 0; ; offset += pageSize) {
                 </tr>
             `;
 
-
-            statusMessage.style.display =
-                "block";
-
+            statusMessage.style.display = "block";
 
             statusMessage.textContent =
                 "Unable to connect to the snag database.";
@@ -621,7 +638,6 @@ for (let offset = 0; ; offset += pageSize) {
         const container =
             document.getElementById(elementId);
 
-
         container.innerHTML = "";
 
 
@@ -642,7 +658,7 @@ for (let offset = 0; ; offset += pageSize) {
 
             updateFilterDisplay();
 
-            displaySnags(getFilteredSnags());
+            displaySnags(getSortedFilteredSnags());
 
             closeAllFilters();
 
@@ -684,7 +700,7 @@ for (let offset = 0; ; offset += pageSize) {
                     updateFilterDisplay();
 
                     displaySnags(
-                        getFilteredSnags()
+                        getSortedFilteredSnags()
                     );
 
                     closeAllFilters();
@@ -762,26 +778,22 @@ for (let offset = 0; ; offset += pageSize) {
 
             const packageMatch =
                 !activeFilters.package ||
-                snag.package ===
-                activeFilters.package;
+                snag.package === activeFilters.package;
 
 
             const vendorMatch =
                 !activeFilters.vendor ||
-                snag.vendor ===
-                activeFilters.vendor;
+                snag.vendor === activeFilters.vendor;
 
 
             const shopMatch =
                 !activeFilters.shop ||
-                snag.shop_building ===
-                activeFilters.shop;
+                snag.shop_building === activeFilters.shop;
 
 
             const statusMatch =
                 !activeFilters.status ||
-                snag.status ===
-                activeFilters.status;
+                snag.status === activeFilters.status;
 
 
             return packageMatch &&
@@ -794,12 +806,84 @@ for (let offset = 0; ; offset += pageSize) {
     }
 
 
+    // Apply the selected closure date sort to the filtered records.
+    // State 0 retains the original list order.
+
+    function getSortedFilteredSnags() {
+
+        const snags = getFilteredSnags();
+
+        if (closureSortState === 0) {
+            return snags;
+        }
+
+        return snags
+            .map((snag, index) => ({
+                snag,
+                index,
+                date: snag.closure_submitted_at
+                    ? new Date(snag.closure_submitted_at).getTime()
+                    : 0
+            }))
+            .sort((a, b) => {
+
+                if (a.date === b.date) {
+                    return a.index - b.index;
+                }
+
+                if (closureSortState === 1) {
+                    return b.date - a.date;
+                }
+
+                return a.date - b.date;
+
+            })
+            .map(item => item.snag);
+
+    }
+
+
+    // Three-state sort:
+    // First click  = Descending
+    // Second click = Ascending
+    // Third click  = Original order
+
+    function toggleClosureSort() {
+
+        closureSortState =
+            (closureSortState + 1) % 3;
+
+
+        const sortIcon =
+            document.getElementById("closureSortIcon");
+
+
+        if (closureSortState === 1) {
+
+            sortIcon.textContent = "↓";
+
+        }
+        else if (closureSortState === 2) {
+
+            sortIcon.textContent = "↑";
+
+        }
+        else {
+
+            sortIcon.textContent = "↕";
+
+        }
+
+
+        displaySnags(getSortedFilteredSnags());
+
+    }
+
+
     function displaySnags(snags) {
 
         const tableBody =
-            document.getElementById(
-                "snagTableBody"
-            );
+            document.getElementById("snagTableBody");
 
 
         tableBody.innerHTML = "";
@@ -834,8 +918,7 @@ for (let offset = 0; ; offset += pageSize) {
                   ).toLocaleString(
                     "en-IN",
                     {
-                        timeZone:
-                            "Asia/Kolkata"
+                        timeZone: "Asia/Kolkata"
                     }
                   )
 
@@ -850,8 +933,7 @@ for (let offset = 0; ; offset += pageSize) {
                   ).toLocaleString(
                     "en-IN",
                     {
-                        timeZone:
-                            "Asia/Kolkata"
+                        timeZone: "Asia/Kolkata"
                     }
                   )
 
@@ -876,13 +958,13 @@ for (let offset = 0; ; offset += pageSize) {
                     rel="noopener noreferrer"
                     class="photo-link">View Photo</a>`
                 : "-";
-            
-            
-                        row.innerHTML = `
-            
-                            <td>
-                                ${snag.id}
-                            </td>
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${snag.id}
+                </td>
 
                 <td>
                     ${snag.package || ""}
@@ -945,17 +1027,28 @@ for (let offset = 0; ; offset += pageSize) {
 
     }
 
-        async function downloadExcelProtected() {
-        const password = prompt("Enter password to download the list:");
+
+    async function downloadExcelProtected() {
+
+        const password =
+            prompt("Enter password to download the list:");
+
         if (password === null) return;
-    
+
+
         if (password !== "MEPF@2026") {
+
             alert("Incorrect password.");
+
             return;
+
         }
-    
+
+
         await downloadExcel();
+
     }
+
 
     async function downloadExcel() {
 
@@ -975,21 +1068,16 @@ for (let offset = 0; ; offset += pageSize) {
 
 
         const downloadButton =
-            document.querySelector(
-                ".btn-download"
-            );
+            document.querySelector(".btn-download");
 
 
         const originalButtonText =
             downloadButton.textContent;
 
 
-        downloadButton.disabled =
-            true;
+        downloadButton.disabled = true;
 
-
-        downloadButton.textContent =
-            "Preparing...";
+        downloadButton.textContent = "Preparing...";
 
 
         try {
@@ -999,9 +1087,7 @@ for (let offset = 0; ; offset += pageSize) {
 
 
             const worksheet =
-                workbook.addWorksheet(
-                    "MEPF Snag List"
-                );
+                workbook.addWorksheet("MEPF Snag List");
 
 
             worksheet.columns = [
@@ -1103,8 +1189,7 @@ for (let offset = 0; ; offset += pageSize) {
                       ).toLocaleString(
                         "en-IN",
                         {
-                            timeZone:
-                                "Asia/Kolkata"
+                            timeZone: "Asia/Kolkata"
                         }
                       )
 
@@ -1119,8 +1204,7 @@ for (let offset = 0; ; offset += pageSize) {
                       ).toLocaleString(
                         "en-IN",
                         {
-                            timeZone:
-                                "Asia/Kolkata"
+                            timeZone: "Asia/Kolkata"
                         }
                       )
 
@@ -1129,47 +1213,33 @@ for (let offset = 0; ; offset += pageSize) {
 
                 worksheet.addRow({
 
-                    id:
-                        snag.id,
+                    id: snag.id,
 
-                    package:
-                        snag.package || "",
+                    package: snag.package || "",
 
-                    vendor:
-                        snag.vendor || "",
+                    vendor: snag.vendor || "",
 
-                    raised_by:
-                        snag.raised_by || "",
+                    raised_by: snag.raised_by || "",
 
-                    raised_on:
-                        raisedOn,
+                    raised_on: raisedOn,
 
-                    shop_building:
-                        snag.shop_building || "",
+                    shop_building: snag.shop_building || "",
 
-                    location:
-                        snag.location || "",
+                    location: snag.location || "",
 
-                    snag_description:
-                        snag.snag_description || "",
+                    snag_description: snag.snag_description || "",
 
-                    status:
-                        snag.status || "",
+                    status: snag.status || "",
 
-                    reference_image:
-                        "",
+                    reference_image: "",
 
-                    action_taken:
-                        snag.action_taken || "",
+                    action_taken: snag.action_taken || "",
 
-                    vendor_decision:
-                        snag.vendor_decision || "",
+                    vendor_decision: snag.vendor_decision || "",
 
-                    closure_photo:
-                        "",
+                    closure_photo: "",
 
-                    closure_submitted_at:
-                        closureSubmittedAt
+                    closure_submitted_at: closureSubmittedAt
 
                 });
 
@@ -1193,9 +1263,7 @@ for (let offset = 0; ; offset += pageSize) {
              * Compress image before adding to Excel
              */
 
-            async function compressImage(
-                imageUrl
-            ) {
+            async function compressImage(imageUrl) {
 
                 const response =
                     await fetch(imageUrl);
@@ -1215,9 +1283,7 @@ for (let offset = 0; ; offset += pageSize) {
 
 
                 const objectUrl =
-                    URL.createObjectURL(
-                        originalBlob
-                    );
+                    URL.createObjectURL(originalBlob);
 
 
                 try {
@@ -1226,35 +1292,26 @@ for (let offset = 0; ; offset += pageSize) {
                         new Image();
 
 
-                    image.src =
-                        objectUrl;
+                    image.src = objectUrl;
 
 
-                    await new Promise(
-                        (resolve, reject) => {
+                    await new Promise((resolve, reject) => {
 
-                            image.onload =
-                                resolve;
+                        image.onload = resolve;
 
-                            image.onerror =
-                                reject;
+                        image.onerror = reject;
 
-                        }
-                    );
+                    });
 
 
-                    const maxWidth =
-                        480;
+                    const maxWidth = 480;
 
-                    const maxHeight =
-                        360;
+                    const maxHeight = 360;
 
 
-                    let width =
-                        image.naturalWidth;
+                    let width = image.naturalWidth;
 
-                    let height =
-                        image.naturalHeight;
+                    let height = image.naturalHeight;
 
 
                     const scale =
@@ -1266,34 +1323,23 @@ for (let offset = 0; ; offset += pageSize) {
 
 
                     width =
-                        Math.round(
-                            width * scale
-                        );
-
+                        Math.round(width * scale);
 
                     height =
-                        Math.round(
-                            height * scale
-                        );
+                        Math.round(height * scale);
 
 
                     const canvas =
-                        document.createElement(
-                            "canvas"
-                        );
+                        document.createElement("canvas");
 
 
-                    canvas.width =
-                        width;
+                    canvas.width = width;
 
-                    canvas.height =
-                        height;
+                    canvas.height = height;
 
 
                     const context =
-                        canvas.getContext(
-                            "2d"
-                        );
+                        canvas.getContext("2d");
 
 
                     context.drawImage(
@@ -1306,29 +1352,27 @@ for (let offset = 0; ; offset += pageSize) {
 
 
                     const compressedBlob =
-                        await new Promise(
-                            (resolve, reject) => {
+                        await new Promise((resolve, reject) => {
 
-                                canvas.toBlob(
-                                    blob => {
+                            canvas.toBlob(
+                                blob => {
 
-                                        if (blob) {
-                                            resolve(blob);
-                                        } else {
-                                            reject(
-                                                new Error(
-                                                    "Image compression failed."
-                                                )
-                                            );
-                                        }
+                                    if (blob) {
+                                        resolve(blob);
+                                    } else {
+                                        reject(
+                                            new Error(
+                                                "Image compression failed."
+                                            )
+                                        );
+                                    }
 
-                                    },
-                                    "image/jpeg",
-                                    0.70
-                                );
+                                },
+                                "image/jpeg",
+                                0.70
+                            );
 
-                            }
-                        );
+                        });
 
 
                     return compressedBlob;
@@ -1336,9 +1380,7 @@ for (let offset = 0; ; offset += pageSize) {
 
                 } finally {
 
-                    URL.revokeObjectURL(
-                        objectUrl
-                    );
+                    URL.revokeObjectURL(objectUrl);
 
                 }
 
@@ -1346,7 +1388,7 @@ for (let offset = 0; ; offset += pageSize) {
 
 
             /*
-             * Add compressed images
+             * Add compressed reference images
              */
 
             for (
@@ -1355,13 +1397,10 @@ for (let offset = 0; ; offset += pageSize) {
                 i++
             ) {
 
-                const snag =
-                    snags[i];
+                const snag = snags[i];
 
 
-                if (
-                    !snag.reference_image
-                ) {
+                if (!snag.reference_image) {
                     continue;
                 }
 
@@ -1373,9 +1412,7 @@ for (let offset = 0; ; offset += pageSize) {
 
 
                     const compressedBlob =
-                        await compressImage(
-                            snag.reference_image
-                        );
+                        await compressImage(snag.reference_image);
 
 
                     const arrayBuffer =
@@ -1385,11 +1422,9 @@ for (let offset = 0; ; offset += pageSize) {
                     const imageId =
                         workbook.addImage({
 
-                            buffer:
-                                arrayBuffer,
+                            buffer: arrayBuffer,
 
-                            extension:
-                                "jpeg"
+                            extension: "jpeg"
 
                         });
 
@@ -1402,13 +1437,15 @@ for (let offset = 0; ; offset += pageSize) {
                                 col: 9,
                                 row: i + 1
                             },
+
                             br: {
                                 col: 10,
                                 row: i + 2
-                            },
+                            }
 
                         }
                     );
+
 
                 } catch (error) {
 
@@ -1432,13 +1469,10 @@ for (let offset = 0; ; offset += pageSize) {
                 i++
             ) {
 
-                const snag =
-                    snags[i];
+                const snag = snags[i];
 
 
-                if (
-                    !snag.closure_photo
-                ) {
+                if (!snag.closure_photo) {
                     continue;
                 }
 
@@ -1450,9 +1484,7 @@ for (let offset = 0; ; offset += pageSize) {
 
 
                     const compressedBlob =
-                        await compressImage(
-                            snag.closure_photo
-                        );
+                        await compressImage(snag.closure_photo);
 
 
                     const arrayBuffer =
@@ -1462,11 +1494,9 @@ for (let offset = 0; ; offset += pageSize) {
                     const imageId =
                         workbook.addImage({
 
-                            buffer:
-                                arrayBuffer,
+                            buffer: arrayBuffer,
 
-                            extension:
-                                "jpeg"
+                            extension: "jpeg"
 
                         });
 
@@ -1479,13 +1509,15 @@ for (let offset = 0; ; offset += pageSize) {
                                 col: 12,
                                 row: i + 1
                             },
+
                             br: {
                                 col: 13,
                                 row: i + 2
-                            },
+                            }
 
                         }
                     );
+
 
                 } catch (error) {
 
@@ -1497,7 +1529,8 @@ for (let offset = 0; ; offset += pageSize) {
                 }
 
             }
-            
+
+
             for (
                 let i = 0;
                 i < snags.length;
@@ -1506,11 +1539,20 @@ for (let offset = 0; ; offset += pageSize) {
                 // image processing...
                 // image insertion...
             }
-            
+
+
             // Set row heights after all images are added
-            for (let i = 0; i < snags.length; i++) {
+
+            for (
+                let i = 0;
+                i < snags.length;
+                i++
+            ) {
+
                 worksheet.getRow(i + 2).height = 74;
+
             }
+
 
             downloadButton.textContent =
                 "Creating Excel...";
@@ -1531,17 +1573,14 @@ for (let offset = 0; ; offset += pageSize) {
 
 
             const url =
-                URL.createObjectURL(
-                    excelBlob
-                );
+                URL.createObjectURL(excelBlob);
 
 
             const link =
                 document.createElement("a");
 
 
-            link.href =
-                url;
+            link.href = url;
 
 
             const date =
@@ -1554,22 +1593,16 @@ for (let offset = 0; ; offset += pageSize) {
                 `MEPF_Snag_List_${date}.xlsx`;
 
 
-            document.body.appendChild(
-                link
-            );
+            document.body.appendChild(link);
 
 
             link.click();
 
 
-            document.body.removeChild(
-                link
-            );
+            document.body.removeChild(link);
 
 
-            URL.revokeObjectURL(
-                url
-            );
+            URL.revokeObjectURL(url);
 
 
         } catch (error) {
@@ -1587,12 +1620,9 @@ for (let offset = 0; ; offset += pageSize) {
 
         } finally {
 
-            downloadButton.disabled =
-                false;
+            downloadButton.disabled = false;
 
-
-            downloadButton.textContent =
-                originalButtonText;
+            downloadButton.textContent = originalButtonText;
 
         }
 
@@ -1638,8 +1668,7 @@ for (let offset = 0; ; offset += pageSize) {
             ).length;
 
 
-        let filterText =
-            "All Snags";
+        let filterText = "All Snags";
 
 
         const selectedFilters = [];
@@ -1681,9 +1710,7 @@ for (let offset = 0; ; offset += pageSize) {
         }
 
 
-        if (
-            selectedFilters.length > 0
-        ) {
+        if (selectedFilters.length > 0) {
 
             filterText =
                 selectedFilters.join(" | ");
@@ -1692,8 +1719,7 @@ for (let offset = 0; ; offset += pageSize) {
 
 
         const subject =
-            "MEPF Snag Status - " +
-            filterText;
+            "MEPF Snag Status - " + filterText;
 
 
         const body =
@@ -1718,23 +1744,33 @@ MEPF Snag Register`;
             encodeURIComponent(body);
 
 
-        window.location.href =
-            mailto;
+        window.location.href = mailto;
 
     }
+
 
     async function viewMasterList() {
-        const password = prompt("Enter password to view the master list:");
+
+        const password =
+            prompt("Enter password to view the master list:");
+
         if (password === null) return;
-    
+
+
         if (password !== "MEPF@2026") {
+
             alert("Incorrect password.");
+
             return;
+
         }
-    
+
+
         await loadSnags(true);
+
     }
-    
+
+
     loadSnags();
 
 </script>
