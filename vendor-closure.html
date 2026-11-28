@@ -550,18 +550,12 @@ function render() {
             getPriority(s.rpn);
 
 
-        return
-
+        return (
             (!search || text.includes(search)) &&
-
             (!vendor || s.vendor === vendor) &&
-
             (!priority || snagPriority === priority) &&
-
-            (!status || normalize(getDisplayStatus(s)) === status);
-
-    });
-
+            (!status || normalize(getDisplayStatus(s)) === status)
+        );
 
     // Apply Priority sorting
 
@@ -580,14 +574,14 @@ function render() {
 
                 // Ascending: Lowest to Highest
 
-                return priorityA - priorityB;
+                return priorityB - priorityA;
 
             }
 
 
             // Descending: Highest to Lowest
 
-            return priorityB - priorityA;
+            return priorityA - priorityB;
 
         });
 
