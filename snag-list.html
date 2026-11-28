@@ -247,7 +247,6 @@
         }
 
         @media (max-width: 600px) {
-
             header h1 {
                 font-size: 20px;
             }
@@ -329,12 +328,9 @@
         <table>
 
             <thead>
-
                 <tr>
 
-                    <th>
-                        Sr. No.
-                    </th>
+                    <th>Sr. No.</th>
 
                     <th>
                         <div class="filter-header">
@@ -346,11 +342,7 @@
                                 ▼
                             </button>
                         </div>
-
-                        <div
-                            id="packageFilter"
-                            class="filter-dropdown">
-                        </div>
+                        <div id="packageFilter" class="filter-dropdown"></div>
                     </th>
 
                     <th>
@@ -363,20 +355,12 @@
                                 ▼
                             </button>
                         </div>
-
-                        <div
-                            id="vendorFilter"
-                            class="filter-dropdown">
-                        </div>
+                        <div id="vendorFilter" class="filter-dropdown"></div>
                     </th>
 
-                    <th>
-                        Raised By
-                    </th>
+                    <th>Raised By</th>
 
-                    <th>
-                        Raised On
-                    </th>
+                    <th>Raised On</th>
 
                     <th>
                         <div class="filter-header">
@@ -388,20 +372,12 @@
                                 ▼
                             </button>
                         </div>
-
-                        <div
-                            id="shopFilter"
-                            class="filter-dropdown">
-                        </div>
+                        <div id="shopFilter" class="filter-dropdown"></div>
                     </th>
 
-                    <th>
-                        Location
-                    </th>
+                    <th>Location</th>
 
-                    <th>
-                        Snag Description
-                    </th>
+                    <th>Snag Description</th>
 
                     <th>
                         <div class="filter-header">
@@ -413,30 +389,27 @@
                                 ▼
                             </button>
                         </div>
-
-                        <div
-                            id="statusFilter"
-                            class="filter-dropdown">
-                        </div>
+                        <div id="statusFilter" class="filter-dropdown"></div>
                     </th>
 
-                    <th>
-                        Reference Image
-                    </th>
+                    <th>Reference Image</th>
 
-                    <!-- Added closure columns -->
+                    <!-- RPN Classification Columns -->
 
-                    <th>
-                        Action Taken
-                    </th>
+                    <th>Category</th>
+                    <th>Category Score</th>
+                    <th>Defect</th>
+                    <th>Defect Score</th>
+                    <th>RPN</th>
+                    <th>Priority</th>
 
-                    <th>
-                        Vendor Decision
-                    </th>
+                    <!-- Existing closure columns -->
 
-                    <th>
-                        Closure Photo
-                    </th>
+                    <th>Action Taken</th>
+
+                    <th>Vendor Decision</th>
+
+                    <th>Closure Photo</th>
 
                     <th
                         class="sortable-heading"
@@ -447,13 +420,12 @@
                     </th>
 
                 </tr>
-
             </thead>
 
             <tbody id="snagTableBody">
 
                 <tr>
-                    <td colspan="14" class="no-data">
+                    <td colspan="20" class="no-data">
                         Loading snags...
                     </td>
                 </tr>
@@ -507,7 +479,6 @@
 
         const statusMessage =
             document.getElementById("statusMessage");
-
 
         try {
 
@@ -568,7 +539,7 @@
 
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="14" class="no-data">
+                    <td colspan="20" class="no-data">
                         Unable to load snag records.
                     </td>
                 </tr>
@@ -605,20 +576,17 @@
             "package"
         );
 
-
         createFilterOptions(
             "vendorFilter",
             getUniqueValues("vendor"),
             "vendor"
         );
 
-
         createFilterOptions(
             "shopFilter",
             getUniqueValues("shop_building"),
             "shop"
         );
-
 
         createFilterOptions(
             "statusFilter",
@@ -639,7 +607,6 @@
             document.getElementById(elementId);
 
         container.innerHTML = "";
-
 
         const clearOption =
             document.createElement("div");
@@ -663,7 +630,6 @@
             closeAllFilters();
 
         };
-
 
         container.appendChild(clearOption);
 
@@ -707,7 +673,6 @@
 
                 };
 
-
             container.appendChild(option);
 
         });
@@ -723,13 +688,10 @@
         const dropdown =
             document.getElementById(filterId);
 
-
         const isOpen =
             dropdown.classList.contains("show");
 
-
         closeAllFilters();
-
 
         if (!isOpen) {
 
@@ -759,7 +721,9 @@
             !event.target.closest(".filter-button") &&
             !event.target.closest(".filter-dropdown")
         ) {
+
             closeAllFilters();
+
         }
 
     });
@@ -780,21 +744,17 @@
                 !activeFilters.package ||
                 snag.package === activeFilters.package;
 
-
             const vendorMatch =
                 !activeFilters.vendor ||
                 snag.vendor === activeFilters.vendor;
-
 
             const shopMatch =
                 !activeFilters.shop ||
                 snag.shop_building === activeFilters.shop;
 
-
             const statusMatch =
                 !activeFilters.status ||
                 snag.status === activeFilters.status;
-
 
             return packageMatch &&
                    vendorMatch &&
@@ -853,10 +813,8 @@
         closureSortState =
             (closureSortState + 1) % 3;
 
-
         const sortIcon =
             document.getElementById("closureSortIcon");
-
 
         if (closureSortState === 1) {
 
@@ -874,8 +832,39 @@
 
         }
 
-
         displaySnags(getSortedFilteredSnags());
+
+    }
+
+
+    // RPN Priority Classification
+
+    function getPriority(rpn) {
+
+        switch (Number(rpn)) {
+
+            case 150:
+                return "Lowest";
+
+            case 200:
+            case 250:
+                return "Low";
+
+            case 225:
+                return "Mid";
+
+            case 300:
+            case 375:
+                return "High";
+
+            case 400:
+            case 500:
+                return "Highest";
+
+            default:
+                return "";
+
+        }
 
     }
 
@@ -885,7 +874,6 @@
         const tableBody =
             document.getElementById("snagTableBody");
 
-
         tableBody.innerHTML = "";
 
 
@@ -893,7 +881,7 @@
 
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="14" class="no-data">
+                    <td colspan="20" class="no-data">
                         No snags found for selected filters.
                     </td>
                 </tr>
@@ -1003,6 +991,30 @@
                 </td>
 
                 <td>
+                    ${snag.category || ""}
+                </td>
+
+                <td>
+                    ${snag.category_score ?? ""}
+                </td>
+
+                <td>
+                    ${snag.defect || ""}
+                </td>
+
+                <td>
+                    ${snag.defect_score ?? ""}
+                </td>
+
+                <td>
+                    ${snag.rpn ?? ""}
+                </td>
+
+                <td>
+                    ${getPriority(snag.rpn)}
+                </td>
+
+                <td>
                     ${snag.action_taken || ""}
                 </td>
 
@@ -1035,7 +1047,6 @@
 
         if (password === null) return;
 
-
         if (password !== "MEPF@2026") {
 
             alert("Incorrect password.");
@@ -1043,7 +1054,6 @@
             return;
 
         }
-
 
         await downloadExcel();
 
@@ -1153,6 +1163,42 @@
                 },
 
                 {
+                    header: "Category",
+                    key: "category",
+                    width: 20
+                },
+
+                {
+                    header: "Category Score",
+                    key: "category_score",
+                    width: 15
+                },
+
+                {
+                    header: "Defect",
+                    key: "defect",
+                    width: 30
+                },
+
+                {
+                    header: "Defect Score",
+                    key: "defect_score",
+                    width: 15
+                },
+
+                {
+                    header: "RPN",
+                    key: "rpn",
+                    width: 12
+                },
+
+                {
+                    header: "Priority",
+                    key: "priority",
+                    width: 15
+                },
+
+                {
                     header: "Action Taken",
                     key: "action_taken",
                     width: 40
@@ -1232,6 +1278,18 @@
                     status: snag.status || "",
 
                     reference_image: "",
+
+                    category: snag.category || "",
+
+                    category_score: snag.category_score ?? "",
+
+                    defect: snag.defect || "",
+
+                    defect_score: snag.defect_score ?? "",
+
+                    rpn: snag.rpn ?? "",
+
+                    priority: getPriority(snag.rpn),
 
                     action_taken: snag.action_taken || "",
 
@@ -1506,12 +1564,12 @@
                         {
 
                             tl: {
-                                col: 12,
+                                col: 18,
                                 row: i + 1
                             },
 
                             br: {
-                                col: 13,
+                                col: 19,
                                 row: i + 2
                             }
 
@@ -1595,9 +1653,7 @@
 
             document.body.appendChild(link);
 
-
             link.click();
-
 
             document.body.removeChild(link);
 
@@ -1753,6 +1809,7 @@ MEPF Snag Register`;
 
         const password =
             prompt("Enter password to view the master list:");
+
 
         if (password === null) return;
 
