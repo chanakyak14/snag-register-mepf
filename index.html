@@ -1,239 +1,237 @@
-<!DOCTYPE html>
 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>MEPF Snag Register</title>
+    <title>MEPF Snag Register</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<style>
-    :root {
-        --navy: #12304a;
-        --navy-dark: #0b2236;
-        --teal: #008b8b;
-        --teal-dark: #006f6f;
-        --light-grey: #f3f6f8;
-        --border: #d8e0e5;
-        --text: #243746;
-        --white: #ffffff;
-    }
+    <style>
+        :root {
+            --navy: #12304a;
+            --navy-dark: #0b2236;
+            --teal: #008b8b;
+            --teal-dark: #006f6f;
+            --light-grey: #f3f6f8;
+            --border: #d8e0e5;
+            --text: #243746;
+            --white: #ffffff;
+        }
 
-    * {
-        box-sizing: border-box;
-    }
+        * {
+            box-sizing: border-box;
+        }
 
-    .list-btn {
-        display: block;
-        text-align: center;
-        margin-top: 12px;
-        padding: 12px;
-        background: #0b1f3a;
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: 600;
-    }
+        .list-btn {
+            display: block;
+            text-align: center;
+            margin-top: 12px;
+            padding: 12px;
+            background: #0b1f3a;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+        }
 
-    .list-btn:hover {
-        background: #16345f;
-    }
+        .list-btn:hover {
+            background: #16345f;
+        }
 
-    body {
-        margin: 0;
-        font-family: Arial, Helvetica, sans-serif;
-        background: var(--light-grey);
-        color: var(--text);
-    }
-
-    .header {
-        background: var(--navy);
-        color: white;
-        padding: 18px 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    }
-
-    .header-content {
-        max-width: 720px;
-        margin: auto;
-    }
-
-    .header h1 {
-        margin: 0;
-        font-size: 23px;
-        font-weight: 600;
-    }
-
-    .header p {
-        margin: 5px 0 0;
-        font-size: 13px;
-        opacity: 0.85;
-    }
-
-    .container {
-        max-width: 720px;
-        margin: 20px auto;
-        padding: 0 15px;
-    }
-
-    .card {
-        background: var(--white);
-        border-radius: 12px;
-        padding: 22px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-    }
-
-    .section-title {
-        margin: 0 0 20px;
-        font-size: 18px;
-        color: var(--navy);
-        font-weight: 600;
-        border-left: 4px solid var(--teal);
-        padding-left: 10px;
-    }
-
-    .field {
-        margin-bottom: 17px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 7px;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text);
-    }
-
-    input,
-    select,
-    textarea {
-        width: 100%;
-        padding: 12px 13px;
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        background: white;
-        color: var(--text);
-        font-size: 15px;
-        outline: none;
-        transition: border 0.2s, box-shadow 0.2s;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus {
-        border-color: var(--teal);
-        box-shadow: 0 0 0 3px rgba(0,139,139,0.10);
-    }
-
-    input:disabled {
-        background: #f3f6f8;
-        color: #243746;
-        opacity: 1;
-        cursor: not-allowed;
-    }
-
-    textarea {
-        min-height: 105px;
-        resize: vertical;
-    }
-
-    input[type="file"] {
-        padding: 10px;
-        background: #fafcfd;
-    }
-
-    .remember-note {
-        display: block;
-        margin-top: 5px;
-        font-size: 11px;
-        color: #7a8992;
-    }
-
-    .submit-button {
-        width: 100%;
-        margin-top: 5px;
-        padding: 13px;
-        border: none;
-        border-radius: 7px;
-        background: var(--teal);
-        color: white;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s, transform 0.1s;
-    }
-
-    .submit-button:hover {
-        background: var(--teal-dark);
-    }
-
-    .submit-button:active {
-        transform: scale(0.99);
-    }
-
-    .submit-button:disabled {
-        background: #9aa9b2;
-        cursor: not-allowed;
-    }
-
-    .message {
-        display: none;
-        margin-top: 15px;
-        padding: 12px;
-        border-radius: 7px;
-        font-size: 14px;
-    }
-
-    .success {
-        display: block;
-        background: #e8f6f4;
-        color: #006b68;
-        border: 1px solid #b9e3df;
-    }
-
-    .error {
-        display: block;
-        background: #fff0f0;
-        color: #a12626;
-        border: 1px solid #f0c3c3;
-    }
-
-    .footer {
-        text-align: center;
-        padding: 20px 10px 25px;
-        font-size: 11px;
-        color: #7a8992;
-    }
-
-    @media (max-width: 600px) {
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light-grey);
+            color: var(--text);
+        }
 
         .header {
-            padding: 16px;
+            background: var(--navy);
+            color: white;
+            padding: 18px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+
+        .header-content {
+            max-width: 720px;
+            margin: auto;
         }
 
         .header h1 {
-            font-size: 20px;
+            margin: 0;
+            font-size: 23px;
+            font-weight: 600;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            opacity: 0.85;
         }
 
         .container {
-            margin: 12px auto;
-            padding: 0 10px;
+            max-width: 720px;
+            margin: 20px auto;
+            padding: 0 15px;
         }
 
         .card {
-            padding: 18px 15px;
-            border-radius: 10px;
+            background: var(--white);
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
         }
 
         .section-title {
-            font-size: 17px;
+            margin: 0 0 20px;
+            font-size: 18px;
+            color: var(--navy);
+            font-weight: 600;
+            border-left: 4px solid var(--teal);
+            padding-left: 10px;
         }
-    }
-</style>
 
+        .field {
+            margin-bottom: 17px;
+        }
 
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 13px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: white;
+            color: var(--text);
+            font-size: 15px;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(0,139,139,0.10);
+        }
+
+        input:disabled,
+        select:disabled {
+            background: #f3f6f8;
+            color: #243746;
+            opacity: 1;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            min-height: 105px;
+            resize: vertical;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            background: #fafcfd;
+        }
+
+        .remember-note {
+            display: block;
+            margin-top: 5px;
+            font-size: 11px;
+            color: #7a8992;
+        }
+
+        .submit-button {
+            width: 100%;
+            margin-top: 5px;
+            padding: 13px;
+            border: none;
+            border-radius: 7px;
+            background: var(--teal);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .submit-button:hover {
+            background: var(--teal-dark);
+        }
+
+        .submit-button:active {
+            transform: scale(0.99);
+        }
+
+        .submit-button:disabled {
+            background: #9aa9b2;
+            cursor: not-allowed;
+        }
+
+        .message {
+            display: none;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        .success {
+            display: block;
+            background: #e8f6f4;
+            color: #006b68;
+            border: 1px solid #b9e3df;
+        }
+
+        .error {
+            display: block;
+            background: #fff0f0;
+            color: #a12626;
+            border: 1px solid #f0c3c3;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px 10px 25px;
+            font-size: 11px;
+            color: #7a8992;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .container {
+                margin: 12px auto;
+                padding: 0 10px;
+            }
+
+            .card {
+                padding: 18px 15px;
+                border-radius: 10px;
+            }
+
+            .section-title {
+                font-size: 17px;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -247,211 +245,227 @@
 
 <main class="container">
 
+    <div class="card">
 
-<div class="card">
+        <h2 class="section-title">Raise New Snag</h2>
 
-    <h2 class="section-title">Raise New Snag</h2>
+        <form id="snagForm">
 
-    <form id="snagForm">
+            <!-- PACKAGE -->
 
-        <!-- PACKAGE -->
+            <div class="field">
+                <label for="package">Package</label>
 
-        <div class="field">
-            <label for="package">Package</label>
+                <select id="package" required>
+                    <option value="">Select Package</option>
+                    <option value="Electrical Package">Electrical Package</option>
+                    <option value="Fire Protection System">Fire Protection System</option>
+                    <option value="Ventilation System">Ventilation System</option>
+                    <option value="Fuel Yard">Fuel Yard</option>
+                    <option value="Piping & Supports">Piping & Supports</option>
+                    <option value="Fire Alarm, Public Addressal, BMS">
+                        Fire Alarm, Public Addressal, BMS
+                    </option>
+                    <option value="WTP RO STP">WTP RO STP</option>
+                    <option value="Treated Fresh Air">Treated Fresh Air</option>
+                    <option value="HVAC">HVAC</option>
+                    <option value="Civil">Civil</option>
+                    <option value="Interiors">Interiors (Admin only)</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
 
-            <select id="package" required>
-                <option value="">Select Package</option>
-                <option value="Electrical Package">Electrical Package</option>
-                <option value="Fire Protection System">Fire Protection System</option>
-                <option value="Ventilation System">Ventilation System</option>
-                <option value="Fuel Yard">Fuel Yard</option>
-                <option value="Piping & Supports">Piping & Supports</option>
-                <option value="Fire Alarm, Public Addressal, BMS">
-                    Fire Alarm, Public Addressal, BMS
-                </option>
-                <option value="WTP RO STP">WTP RO STP</option>
-                <option value="Treated Fresh Air">Treated Fresh Air</option>
-                <option value="HVAC">HVAC</option>
-                <option value="Civil">Civil</option>
-                <option value="Interiors">Interiors (Admin only)</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
+            <!-- VENDOR -->
 
+            <div class="field">
+                <label for="vendor">Vendor</label>
 
-        <!-- VENDOR -->
+                <input
+                    type="text"
+                    id="vendor"
+                    placeholder="Select Package First"
+                    required
+                    disabled
+                >
+            </div>
 
-        <div class="field">
-            <label for="vendor">Vendor</label>
+            <!-- RAISED BY -->
 
-            <input
-                type="text"
-                id="vendor"
-                placeholder="Select Package First"
-                required
-                disabled
+            <div class="field">
+                <label for="raisedBy">Raised By</label>
+
+                <input
+                    type="text"
+                    id="raisedBy"
+                    placeholder="Enter your name"
+                    required
+                >
+
+                <small class="remember-note">
+                    Name will be remembered on this device.
+                </small>
+            </div>
+
+            <!-- MOBILE -->
+
+            <div class="field">
+                <label for="raisedMobile">Mobile No.</label>
+
+                <input
+                    type="tel"
+                    id="raisedMobile"
+                    placeholder="Enter mobile number (optional)"
+                    inputmode="numeric"
+                    maxlength="10"
+                    pattern="[0-9]{10}"
+                >
+
+                <small class="remember-note">
+                    Mobile number is optional and will be remembered on this device.
+                </small>
+            </div>
+
+            <!-- SHOP / BUILDING -->
+
+            <div class="field">
+                <label for="shopBuilding">Shop / Building</label>
+
+                <select id="shopBuilding" required>
+                    <option value="">Select Shop / Building</option>
+                    <option value="Metering Yard">Metering Yard</option>
+                    <option value="Sub Station">Sub Station</option>
+                    <option value="Fuel Yard">Fuel Yard</option>
+                    <option value="Utility">Utility</option>
+                    <option value="Security Cabin 02">Security Cabin 02</option>
+                    <option value="Canteen">Canteen</option>
+                    <option value="Admin">Admin</option>
+                    <option value="CKD">CKD</option>
+                    <option value="External">External</option>
+                    <option value="OHC">OHC</option>
+                    <option value="Security Cabin 01">Security Cabin 01</option>
+                    <option value="Security Cabin 03">Security Cabin 03</option>
+                    <option value="Security Office">Security Office</option>
+                    <option value="Fire Office">Fire Office</option>
+                    <option value="Male Locker Room">Male Locker Room</option>
+                    <option value="Female Locker Room">Female Locker Room</option>
+                    <option value="ATM">ATM</option>
+                    <option value="Creche">Creche</option>
+                    <option value="PDI">PDI</option>
+                    <option value="Warehouse Office">Warehouse Office</option>
+                    <option value="Canteen Dining">Canteen Dining</option>
+                    <option value="Kitchen">Kitchen</option>
+                    <option value="Weigh Bridge">Weigh Bridge</option>
+                    <option value="LECI">LECI</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <!-- LOCATION -->
+
+            <div class="field">
+                <label for="location">Location</label>
+
+                <input
+                    type="text"
+                    id="location"
+                    placeholder="Enter specific location"
+                    required
+                >
+            </div>
+
+            <!-- DESCRIPTION -->
+
+            <div class="field">
+                <label for="snagDescription">
+                    Snag Point Description
+                </label>
+
+                <textarea
+                    id="snagDescription"
+                    placeholder="Describe the snag clearly"
+                    required
+                ></textarea>
+            </div>
+
+            <!-- CATEGORY 1 -->
+
+            <div class="field">
+                <label for="category">Category</label>
+
+                <select id="category" required>
+                    <option value="">Select Category</option>
+                    <option value="Safety">Safety</option>
+                    <option value="Quality">Quality</option>
+                    <option value="Hygiene">Hygiene</option>
+                    <option value="Critical to Timeline">Critical to Timeline</option>
+                    <option value="Budget">Budget</option>
+                    <option value="Certification">Certification</option>
+                    <option value="Reliability">Reliability</option>
+                </select>
+            </div>
+
+            <!-- CATEGORY 2 -->
+
+            <div class="field">
+                <label for="defect">Defect</label>
+
+                <select id="defect" required disabled>
+                    <option value="">Select Category First</option>
+                </select>
+            </div>
+
+            <!-- REFERENCE IMAGE -->
+
+            <div class="field">
+                <label for="referenceImage">
+                    Reference Image
+                </label>
+
+                <div style="display:flex; gap:10px;">
+                    <button type="button" onclick="document.getElementById('cameraInput').click()">
+                        📷 Take Photo
+                    </button>
+
+                    <button type="button" onclick="document.getElementById('galleryInput').click()">
+                        📁 Choose File
+                    </button>
+                </div>
+
+                <input
+                    type="file"
+                    id="cameraInput"
+                    accept="image/*"
+                    capture="environment"
+                    style="display:none;"
+                >
+
+                <input
+                    type="file"
+                    id="galleryInput"
+                    accept="image/*"
+                    style="display:none;"
+                >
+            </div>
+
+            <!-- SUBMIT -->
+
+            <button
+                type="submit"
+                class="submit-button"
+                id="submitButton"
             >
-        </div>
-
-
-        <!-- RAISED BY -->
-
-        <div class="field">
-            <label for="raisedBy">Raised By</label>
-
-            <input
-                type="text"
-                id="raisedBy"
-                placeholder="Enter your name"
-                required
-            >
-
-            <small class="remember-note">
-                Name will be remembered on this device.
-            </small>
-        </div>
-
-
-        <!-- MOBILE -->
-
-        <div class="field">
-            <label for="raisedMobile">Mobile No.</label>
-
-            <input
-                type="tel"
-                id="raisedMobile"
-                placeholder="Enter mobile number (optional)"
-                inputmode="numeric"
-                maxlength="10"
-                pattern="[0-9]{10}"
-            >
-
-            <small class="remember-note">
-                Mobile number is optional and will be remembered on this device.
-            </small>
-        </div>
-
-
-        <!-- SHOP / BUILDING -->
-
-        <div class="field">
-            <label for="shopBuilding">Shop / Building</label>
-
-            <select id="shopBuilding" required>
-                <option value="">Select Shop / Building</option>
-        <option value="Metering Yard">Metering Yard</option>
-        <option value="Sub Station">Sub Station</option>
-        <option value="Fuel Yard">Fuel Yard</option>
-        <option value="Utility">Utility</option>
-        <option value="Security Cabin 02">Security Cabin 02</option>
-        <option value="Canteen">Canteen</option>
-        <option value="Admin">Admin</option>
-        <option value="CKD">CKD</option>
-        <option value="External">External</option>
-        <option value="OHC">OHC</option>
-        <option value="Security Cabin 01">Security Cabin 01</option>
-        <option value="Security Cabin 03">Security Cabin 03</option>
-        <option value="Security Office">Security Office</option>
-        <option value="Fire Office">Fire Office</option>
-        <option value="Male Locker Room">Male Locker Room</option>
-        <option value="Female Locker Room">Female Locker Room</option>
-        <option value="ATM">ATM</option>
-        <option value="Creche">Creche</option>
-        <option value="PDI">PDI</option>
-        <option value="Warehouse Office">Warehouse Office</option>
-        <option value="Canteen Dining">Canteen Dining</option>
-        <option value="Kitchen">Kitchen</option>
-        <option value="Weigh Bridge">Weigh Bridge</option>
-        <option value="LECI">LECI</option>
-
-        <option value="Other">Other</option>
-            </select>
-        </div>
-
-
-        <!-- LOCATION -->
-
-        <div class="field">
-            <label for="location">Location</label>
-
-            <input
-                type="text"
-                id="location"
-                placeholder="Enter specific location"
-                required
-            >
-        </div>
-
-
-        <!-- DESCRIPTION -->
-
-        <div class="field">
-            <label for="snagDescription">
-                Snag Point Description
-            </label>
-
-            <textarea
-                id="snagDescription"
-                placeholder="Describe the snag clearly"
-                required
-            ></textarea>
-        </div>
-
-
-        <!-- REFERENCE IMAGE -->
-
-        <div class="field">
-            <label for="referenceImage">
-                Reference Image
-            </label>
-
-        <div style="display:flex; gap:10px;">
-            <button type="button" onclick="document.getElementById('cameraInput').click()">
-                📷 Take Photo
+                Submit Snag
             </button>
-        
-            <button type="button" onclick="document.getElementById('galleryInput').click()">
-                📁 Choose File
-            </button>
-        </div>
-        
-        <input
-            type="file"
-            id="cameraInput"
-            accept="image/*"
-            capture="environment"
-            style="display:none;"
-        >
-        
-        <input
-            type="file"
-            id="galleryInput"
-            accept="image/*"
-            style="display:none;"
-        >
-        </div>
 
+            <a href="snag-list.html" class="list-btn">
+                View Snag List
+            </a>
 
-        <!-- SUBMIT -->
+        </form>
 
-        <button
-            type="submit"
-            class="submit-button"
-            id="submitButton"
-        >
-            Submit Snag
-        </button>
+        <div id="message" class="message"></div>
 
-        <a href="snag-list.html" class="list-btn">
-            View Snag List
-        </a>
-
-    </form>
-
-    <div id="message" class="message"></div>
-
-</div>
-
+    </div>
 
 </main>
 
@@ -500,27 +514,25 @@ const packageSelect =
 
 const vendorInput =
     document.getElementById("vendor");
-    const shopBuildingSelect = document.getElementById("shopBuilding");
+
+const shopBuildingSelect =
+    document.getElementById("shopBuilding");
 
 
 packageSelect.addEventListener("change", function() {
 
     const selectedPackage =
         packageSelect.value;
+
     if (selectedPackage === "Interiors") {
-    shopBuildingSelect.value = "Admin";
-    shopBuildingSelect.disabled = true;
+        shopBuildingSelect.value = "Admin";
+        shopBuildingSelect.disabled = true;
     } else {
         shopBuildingSelect.disabled = false;
     }
 
     const mappedVendor =
         packageVendorMap[selectedPackage];
-
-
-    // --------------------------------------------------
-    // NORMAL PACKAGE → AUTO MAPPED VENDOR
-    // --------------------------------------------------
 
     if (mappedVendor) {
 
@@ -534,11 +546,6 @@ packageSelect.addEventListener("change", function() {
             "";
 
     }
-
-
-    // --------------------------------------------------
-    // OTHER → BLANK EDITABLE VENDOR
-    // --------------------------------------------------
 
     else if (selectedPackage === "Other") {
 
@@ -555,11 +562,6 @@ packageSelect.addEventListener("change", function() {
 
     }
 
-
-    // --------------------------------------------------
-    // NO PACKAGE SELECTED
-    // --------------------------------------------------
-
     else {
 
         vendorInput.value =
@@ -570,6 +572,149 @@ packageSelect.addEventListener("change", function() {
 
         vendorInput.disabled =
             true;
+
+    }
+
+});
+
+
+// ======================================================
+// CATEGORY 1 → SCORE MAPPING
+// ======================================================
+
+const categoryScores = {
+
+    "Safety": 100,
+    "Quality": 75,
+    "Hygiene": 50,
+    "Critical to Timeline": 75,
+    "Budget": 100,
+    "Certification": 100,
+    "Reliability": 50
+
+};
+
+
+// ======================================================
+// CATEGORY 2 → DEFECT AND SCORE MASTER
+// ======================================================
+
+const defectMaster = [
+
+    { name: "Rework Required", score: 5 },
+    { name: "Material Wastage", score: 4 },
+    { name: "Damaged Asset", score: 5 },
+    { name: "Damaged Cable", score: 5 },
+    { name: "Damaged Equipment", score: 5 },
+    { name: "Non Standard Material Used", score: 5 },
+    { name: "Wrong Size Hardware Used", score: 3 },
+    { name: "Excess Material Consumption", score: 4 },
+    { name: "Replacement Required", score: 5 },
+    { name: "Scrap Generation", score: 4 },
+    { name: "Improper Material Utilization", score: 4 },
+    { name: "Avoidable Rectification", score: 3 },
+    { name: "Cost Impact Due to Rework", score: 5 },
+    { name: "Resource Wastage", score: 4 },
+    { name: "Budget Overrun Risk", score: 5 },
+    { name: "Misalignment", score: 5 },
+    { name: "Tilted Support", score: 5 },
+    { name: "Improper Installation", score: 5 },
+    { name: "Poor Workmanship", score: 5 },
+    { name: "Missing End Cap", score: 4 },
+    { name: "Missing Bolt/Nut", score: 4 },
+    { name: "Pipe Alignment", score: 4 },
+    { name: "Duct Alignment", score: 4 },
+    { name: "Tray Alignment", score: 4 },
+    { name: "Support Missing", score: 4 },
+    { name: "Ageing", score: 5 },
+    { name: "Material Not Available", score: 5 },
+    { name: "Installation Pending", score: 4 },
+    { name: "Cable Termination Pending", score: 4 },
+    { name: "Earthing Pending", score: 5 },
+    { name: "Testing Pending", score: 4 },
+    { name: "Commissioning Pending", score: 4 },
+    { name: "Approval Pending", score: 5 },
+    { name: "Inspection Pending", score: 4 },
+    { name: "Punch Point Open", score: 4 },
+    { name: "Interface Work Pending", score: 4 },
+    { name: "Vendor Activity Pending", score: 4 },
+    { name: "Drawing Closure Pending", score: 5 },
+    { name: "Clearance Pending", score: 5 },
+    { name: "Dependency Not Closed", score: 5 },
+    { name: "Non Standard Support Used", score: 5 },
+    { name: "Non Standard Cable Identification Used", score: 5 },
+    { name: "Non Standard Cable Tie Used", score: 5 },
+    { name: "Standard Detail Not Followed", score: 5 },
+    { name: "Approved Hardware Not Used", score: 5 },
+    { name: "Dummy Plate Not Provided", score: 4 },
+    { name: "Gland Sleeve Not Provided", score: 4 },
+    { name: "Mandatory Clamp Not Provided", score: 5 },
+    { name: "Standard Fastener Arrangement Not Followed", score: 5 },
+    { name: "Earth Connectivity Not As Per Standard", score: 5 },
+    { name: "Certification Pending", score: 5 },
+    { name: "Compliance Deviation", score: 5 },
+    { name: "Drawing Requirement Not Met", score: 5 },
+    { name: "Specification Not Followed", score: 5 },
+    { name: "Installation Not As Per Approved Standard", score: 5 },
+    { name: "Cable Damage Observed", score: 5 },
+    { name: "Open Panel Space", score: 5 },
+    { name: "Dummy Plate Missing", score: 4 },
+    { name: "Loose Fastener", score: 5 },
+    { name: "Clamp Missing", score: 5 },
+    { name: "Support Loose", score: 4 },
+    { name: "Improper Cable Dressing", score: 5 },
+    { name: "Damaged Hose Reel Box", score: 5 },
+    { name: "Glass Missing", score: 4 },
+    { name: "Sharp Edge Present", score: 5 },
+    { name: "Bolt/Nut Missing", score: 5 },
+    { name: "Poor Mechanical Fixing", score: 5 },
+    { name: "Improper Equipment Anchorage", score: 5 },
+    { name: "Reliability Risk Due To Installation", score: 4 }
+
+];
+
+
+// ======================================================
+// CATEGORY AND DEFECT DROPDOWN HANDLING
+// ======================================================
+
+const categorySelect =
+    document.getElementById("category");
+
+const defectSelect =
+    document.getElementById("defect");
+
+
+categorySelect.addEventListener("change", function() {
+
+    defectSelect.innerHTML =
+        '<option value="">Select Defect</option>';
+
+    defectSelect.value = "";
+
+    if (categorySelect.value) {
+
+        defectSelect.disabled = false;
+
+        defectMaster.forEach(function(item, index) {
+
+            const option =
+                document.createElement("option");
+
+            option.value = item.name;
+            option.textContent = item.name;
+            option.dataset.score = item.score;
+
+            defectSelect.appendChild(option);
+
+        });
+
+    } else {
+
+        defectSelect.disabled = true;
+
+        defectSelect.innerHTML =
+            '<option value="">Select Category First</option>';
 
     }
 
@@ -644,11 +789,46 @@ document
             const snagDescription =
                 document.getElementById("snagDescription").value.trim();
 
-            const cameraFile = document.getElementById("cameraInput").files[0];
-            const galleryFile = document.getElementById("galleryInput").files[0];
-            
-            const imageFile = cameraFile || galleryFile;
-            
+            // Category 1 and score
+            const category =
+                categorySelect.value;
+
+            const categoryScore =
+                categoryScores[category];
+
+            // Category 2 and score
+            const defect =
+                defectSelect.value;
+
+            const selectedDefect =
+                defectMaster.find(function(item) {
+                    return item.name === defect;
+                });
+
+            if (!category || categoryScore === undefined) {
+                throw new Error("Please select Category.");
+            }
+
+            if (!selectedDefect) {
+                throw new Error("Please select Defect.");
+            }
+
+            const defectScore =
+                selectedDefect.score;
+
+            // RPN calculation
+            const rpn =
+                categoryScore * defectScore;
+
+            const cameraFile =
+                document.getElementById("cameraInput").files[0];
+
+            const galleryFile =
+                document.getElementById("galleryInput").files[0];
+
+            const imageFile =
+                cameraFile || galleryFile;
+
             if (!imageFile) {
                 throw new Error("Reference Image is mandatory. Please take a photo or choose a file.");
             }
@@ -679,18 +859,15 @@ document
 
             let imageUrl = null;
 
-
             if (imageFile) {
 
                 const fileName =
                     Date.now() +
                     "-" +
-                    imageFile.name
-                    .replace(
+                    imageFile.name.replace(
                         /[^a-zA-Z0-9.-]/g,
                         "_"
                     );
-
 
                 const { error: uploadError } =
                     await supabaseClient
@@ -701,11 +878,9 @@ document
                         imageFile
                     );
 
-
                 if (uploadError) {
                     throw uploadError;
                 }
-
 
                 const { data: publicUrlData } =
                     supabaseClient
@@ -714,7 +889,6 @@ document
                     .getPublicUrl(
                         fileName
                     );
-
 
                 imageUrl =
                     publicUrlData.publicUrl;
@@ -727,7 +901,6 @@ document
 
             const raisedOn =
                 new Date().toISOString();
-
 
             const { error } =
                 await supabaseClient
@@ -759,7 +932,22 @@ document
                         snagDescription,
 
                     reference_image:
-                        imageUrl
+                        imageUrl,
+
+                    category:
+                        category,
+
+                    category_score:
+                        categoryScore,
+
+                    defect:
+                        defect,
+
+                    defect_score:
+                        defectScore,
+
+                    rpn:
+                        rpn
 
                 }]);
 
@@ -798,13 +986,24 @@ document
 
             document.getElementById("shopBuilding").value = "";
 
+            document.getElementById("shopBuilding").disabled = false;
+
             document.getElementById("location").value = "";
 
             document.getElementById("snagDescription").value = "";
 
-            document.getElementById("cameraInput").value = "";
-            document.getElementById("galleryInput").value = "";
+            document.getElementById("category").value = "";
 
+            document.getElementById("defect").innerHTML =
+                '<option value="">Select Category First</option>';
+
+            document.getElementById("defect").value = "";
+
+            document.getElementById("defect").disabled = true;
+
+            document.getElementById("cameraInput").value = "";
+
+            document.getElementById("galleryInput").value = "";
 
             document.getElementById("raisedBy").value =
                 localStorage.getItem("mepfRaisedBy") || "";
