@@ -209,7 +209,18 @@ footer{text-align:center;color:#777;font-size:11px;padding:24px}
 
 
 <footer>Developed by Ravi Teja M</footer>
+<script>
+window.addEventListener("error", function(event) {
+    document.getElementById("message").textContent =
+        "JavaScript Error: " + event.message +
+        " | Line: " + event.lineno;
+});
 
+window.addEventListener("unhandledrejection", function(event) {
+    document.getElementById("message").textContent =
+        "Promise Error: " + event.reason;
+});
+</script>
 
 <script>
 
